@@ -1,6 +1,7 @@
 # p2p-drop
 
 [![CI](https://github.com/Josheqani/p2p-drop/actions/workflows/ci.yml/badge.svg)](https://github.com/Josheqani/p2p-drop/actions/workflows/ci.yml)
+[![Live Site](https://img.shields.io/badge/Live_Site-p2p--drop.pages.dev-emerald?style=flat&logo=cloudflare)](https://p2p-drop.pages.dev)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 > Send files between two devices directly from the browser using WebRTC. No server, no upload.
