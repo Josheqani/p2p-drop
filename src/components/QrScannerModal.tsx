@@ -95,60 +95,76 @@ export function QrScannerModal({ isOpen, onClose, onScan }: QrScannerModalProps)
         }
       }
 
+      let isFrameProcessing = false
+      let hasCompleted = false
+
       async function scanFrame() {
-        if (!active || !videoRef.current) return
+        if (!active || !videoRef.current || hasCompleted) return
+
+        if (isFrameProcessing) {
+          animFrameRef.current = requestAnimationFrame(scanFrame)
+          return
+        }
 
         const video = videoRef.current
         if (video.readyState === video.HAVE_ENOUGH_DATA) {
-          let detectedCode: string | null = null
+          isFrameProcessing = true
+          try {
+            let detectedCode: string | null = null
 
-          if (barcodeDetector) {
-            try {
-              const barcodes = await barcodeDetector.detect(video)
-              if (barcodes.length > 0 && barcodes[0].rawValue) {
-                detectedCode = barcodes[0].rawValue
-              }
-            } catch {
-              // Fallback to jsQR on detection error
-            }
-          }
-
-          if (!detectedCode) {
-            // jsQR fallback
-            if (!canvasRef.current) {
-              canvasRef.current = document.createElement('canvas')
-            }
-            const canvas = canvasRef.current
-            const ctx = canvas.getContext('2d', { willReadFrequently: true })
-
-            if (ctx) {
-              canvas.width = video.videoWidth
-              canvas.height = video.videoHeight
-              ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
-              const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
-              const code = jsQR(imageData.data, imageData.width, imageData.height, {
-                inversionAttempts: 'dontInvert',
-              })
-              if (code && code.data) {
-                detectedCode = code.data
+            if (barcodeDetector) {
+              try {
+                const barcodes = await barcodeDetector.detect(video)
+                if (barcodes.length > 0 && barcodes[0].rawValue) {
+                  detectedCode = barcodes[0].rawValue
+                }
+              } catch {
+                // Fallback to jsQR on detection error
               }
             }
-          }
 
-          if (detectedCode) {
-            const res = asm.feed(detectedCode)
-            if (res.completed && res.fullCode) {
-              cleanup()
-              onScan(res.fullCode)
-              onClose()
-              return
-            } else if (asm.progress.total > 1) {
-              setScanProgress(asm.progress)
+            if (!detectedCode) {
+              // jsQR fallback
+              if (!canvasRef.current) {
+                canvasRef.current = document.createElement('canvas')
+              }
+              const canvas = canvasRef.current
+              const ctx = canvas.getContext('2d', { willReadFrequently: true })
+
+              if (ctx) {
+                canvas.width = video.videoWidth
+                canvas.height = video.videoHeight
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
+                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
+                const code = jsQR(imageData.data, imageData.width, imageData.height, {
+                  inversionAttempts: 'dontInvert',
+                })
+                if (code && code.data) {
+                  detectedCode = code.data
+                }
+              }
             }
+
+            if (detectedCode && !hasCompleted) {
+              const res = asm.feed(detectedCode)
+              if (res.completed && res.fullCode) {
+                hasCompleted = true
+                cleanup()
+                onScan(res.fullCode)
+                onClose()
+                return
+              } else if (asm.progress.total > 1) {
+                setScanProgress(asm.progress)
+              }
+            }
+          } finally {
+            isFrameProcessing = false
           }
         }
 
-        animFrameRef.current = requestAnimationFrame(scanFrame)
+        if (!hasCompleted) {
+          animFrameRef.current = requestAnimationFrame(scanFrame)
+        }
       }
 
       animFrameRef.current = requestAnimationFrame(scanFrame)

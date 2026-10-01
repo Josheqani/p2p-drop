@@ -210,6 +210,22 @@ export class PeerConnection {
     if (!this.pc) {
       throw new Error('Cannot accept answer without an active peer connection')
     }
+
+    if (this.pc.signalingState === 'stable') {
+      if (this.pc.remoteDescription?.type === 'answer') {
+        return
+      }
+      throw new Error(
+        'Cannot accept answer: This device is in stable state and not expecting an answer. Please verify this device created the room (Offer) and the other device joined (Answer).'
+      )
+    }
+
+    if (this.pc.signalingState !== 'have-local-offer') {
+      throw new Error(
+        `Cannot accept answer: WebRTC connection is in "${this.pc.signalingState}" state instead of waiting for an answer.`
+      )
+    }
+
     this.setState('connecting')
     const desc = await decodeDescription(answerCode)
     if (desc.type !== 'answer') {

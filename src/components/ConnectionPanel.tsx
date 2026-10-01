@@ -144,6 +144,7 @@ export function ConnectionPanel() {
   const handleAcceptAnswer = async (codeToUse?: string) => {
     const targetCode = (codeToUse ?? inputCode).trim()
     if (!peer || !targetCode) return
+    if (state === 'connected' || state === 'connecting') return
     setError(null)
     try {
       await peer.acceptAnswer(targetCode)
