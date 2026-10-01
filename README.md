@@ -4,7 +4,7 @@
 [![Live Site](https://img.shields.io/badge/Live_Site-p2p--drop.pages.dev-emerald?style=flat&logo=cloudflare)](https://p2p-drop.pages.dev)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-> Send files between two devices directly from the browser using WebRTC. No server, no upload.
+> 🛸 Yeet files directly browser-to-browser with WebRTC magic! No servers, no clouds, zero trust issues. 🪂⚡️
 
 p2p-drop is a fast, completely server-less, browser-to-browser file transfer web application. Direct peer connections are formed via manual signaling (copy-pasting or animated QR codes), allowing users to send files of any size directly without ever uploading data to a third-party server.
 
