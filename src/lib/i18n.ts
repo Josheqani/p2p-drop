@@ -52,7 +52,10 @@ export interface TranslationStrings {
   scanQr: string
   cameraDenied: string
   close: string
+  connectionFailedExplanation: string
+  transferInProgressWarning: string
 }
+
 
 
 export const translations: Record<Language, TranslationStrings> = {
@@ -106,6 +109,10 @@ export const translations: Record<Language, TranslationStrings> = {
     scanQr: 'Scan QR with Camera',
     cameraDenied: 'Camera access denied or unavailable. Please paste the code manually.',
     close: 'Close',
+    connectionFailedExplanation:
+      'Direct WebRTC connection could not be established. This usually happens when one or both devices are on restrictive enterprise/cellular networks or behind symmetric NATs that block direct peer-to-peer UDP connections.',
+    transferInProgressWarning:
+      'A file transfer is currently in progress. Leaving this page will cancel the transfer.',
   },
   fa: {
     title: 'پی‌توپی دراپ',
@@ -157,6 +164,10 @@ export const translations: Record<Language, TranslationStrings> = {
     scanQr: 'اسکن بارکد با دوربین',
     cameraDenied: 'دسترسی به دوربین رد شد یا در دسترس نیست. لطفاً کد را دستی وارد کنید.',
     close: 'بستن',
+    connectionFailedExplanation:
+      'برقراری ارتباط مستقیم نظیربه‌نظیر ناموفق بود. این موضوع معمولاً به دلیل فایروال‌های سخت‌گیرانه شبکه‌های سازمانی، اینترنت همراه یا NATهای متقارن رخ می‌دهد که اتصال مستقیم را مسدود می‌کنند.',
+    transferInProgressWarning:
+      'انتقال فایل در حال انجام است. خروج از این صفحه موجب لغو انتقال خواهد شد.',
   },
 }
 

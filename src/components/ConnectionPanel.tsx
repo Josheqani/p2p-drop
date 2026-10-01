@@ -42,6 +42,36 @@ export function ConnectionPanel() {
     }
   }, [])
 
+  // beforeunload warning and screen WakeLock during active transfers
+  useEffect(() => {
+    const isTransferring = transfers.some((t) => t.status === 'transferring')
+    if (!isTransferring) return
+
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      e.preventDefault()
+      e.returnValue = t('transferInProgressWarning')
+    }
+
+    window.addEventListener('beforeunload', handleBeforeUnload)
+
+    let wakeLockSentinel: { release: () => Promise<void> } | null = null
+    if (typeof navigator !== 'undefined' && 'wakeLock' in navigator) {
+      navigator.wakeLock
+        .request('screen')
+        .then((sentinel: { release: () => Promise<void> }) => {
+          wakeLockSentinel = sentinel
+        })
+        .catch(() => {})
+    }
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload)
+      if (wakeLockSentinel) {
+        wakeLockSentinel.release().catch(() => {})
+      }
+    }
+  }, [transfers, t])
+
   const copyToClipboard = async (text: string, label: string) => {
     try {
       await navigator.clipboard.writeText(text)
@@ -191,6 +221,22 @@ export function ConnectionPanel() {
           className="p-3 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 rounded-lg text-rose-800 dark:text-rose-300 text-xs"
         >
           {error}
+        </div>
+      )}
+
+      {state === 'failed' && (
+        <div
+          role="alert"
+          data-testid="connection-failed-explanation"
+          className="p-3.5 bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-800 rounded-xl text-amber-900 dark:text-amber-200 text-xs space-y-1 text-start shadow-xs"
+        >
+          <div className="font-semibold flex items-center gap-1.5 text-amber-900 dark:text-amber-100">
+            <span>⚠️</span>
+            <span>{t('statusFailed')}</span>
+          </div>
+          <p className="text-[11px] leading-relaxed text-amber-800 dark:text-amber-300">
+            {t('connectionFailedExplanation')}
+          </p>
         </div>
       )}
 
