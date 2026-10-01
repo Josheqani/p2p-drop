@@ -1,4 +1,5 @@
 import { encodeDescription, decodeDescription } from './signaling'
+import { getActiveIceServers } from './iceConfig'
 
 export type PeerState =
   | 'idle'
@@ -13,10 +14,6 @@ export interface PeerOptions {
   iceServers?: RTCIceServer[]
   iceGatheringTimeoutMs?: number
 }
-
-const DEFAULT_ICE_SERVERS: RTCIceServer[] = [
-  { urls: 'stun:stun.l.google.com:19302' },
-]
 
 type StateChangeHandler = (state: PeerState) => void
 type MessageHandler = (data: string | ArrayBuffer) => void
@@ -35,8 +32,8 @@ export class PeerConnection {
   private closeListeners = new Set<SimpleHandler>()
 
   constructor(options?: PeerOptions) {
-    this.iceServers = options?.iceServers ?? DEFAULT_ICE_SERVERS
-    this.iceTimeoutMs = options?.iceGatheringTimeoutMs ?? 4000
+    this.iceServers = options?.iceServers ?? getActiveIceServers()
+    this.iceTimeoutMs = options?.iceGatheringTimeoutMs ?? 5000
   }
 
   get state(): PeerState {

@@ -54,6 +54,17 @@ export interface TranslationStrings {
   close: string
   connectionFailedExplanation: string
   transferInProgressWarning: string
+  settings: string
+  iceSettings: string
+  iceSettingsDesc: string
+  turnRelay: string
+  turnRelayDesc: string
+  activeIceServers: string
+  customIceServers: string
+  customIceServersDesc: string
+  resetDefaults: string
+  save: string
+  saved: string
 }
 
 
@@ -113,6 +124,19 @@ export const translations: Record<Language, TranslationStrings> = {
       'Direct WebRTC connection could not be established. This usually happens when one or both devices are on restrictive enterprise/cellular networks or behind symmetric NATs that block direct peer-to-peer UDP connections.',
     transferInProgressWarning:
       'A file transfer is currently in progress. Leaving this page will cancel the transfer.',
+    settings: 'Network Settings',
+    iceSettings: 'WebRTC & Relay Settings',
+    iceSettingsDesc:
+      'Configure STUN and TURN servers to help connect through cellular firewalls (MCI/Irancell), symmetric NAT, and VPNs.',
+    turnRelay: 'Enable TURN Relay',
+    turnRelayDesc:
+      'Uses encrypted relay servers (OpenRelay) if direct P2P connection fails due to symmetric NAT or VPN.',
+    activeIceServers: 'Active STUN/TURN Servers',
+    customIceServers: 'Custom ICE Servers (JSON)',
+    customIceServersDesc: 'Supply your own custom RTCIceServer list.',
+    resetDefaults: 'Reset to Defaults',
+    save: 'Save',
+    saved: 'Saved!',
   },
   fa: {
     title: 'پی‌توپی دراپ',
@@ -165,9 +189,22 @@ export const translations: Record<Language, TranslationStrings> = {
     cameraDenied: 'دسترسی به دوربین رد شد یا در دسترس نیست. لطفاً کد را دستی وارد کنید.',
     close: 'بستن',
     connectionFailedExplanation:
-      'برقراری ارتباط مستقیم نظیربه‌نظیر ناموفق بود. این موضوع معمولاً به دلیل فایروال‌های سخت‌گیرانه شبکه‌های سازمانی، اینترنت همراه یا NATهای متقارن رخ می‌دهد که اتصال مستقیم را مسدود می‌کنند.',
+      'برقراری ارتباط مستقیم نظیربه‌نظیر ناموفق بود. بررسی کنید که گزینه رله TURN در تنظیمات فعال باشد، یا بدون فیلترشکن روی یک وای‌فای مشترک تست کنید.',
     transferInProgressWarning:
       'انتقال فایل در حال انجام است. خروج از این صفحه موجب لغو انتقال خواهد شد.',
+    settings: 'تنظیمات شبکه',
+    iceSettings: 'تنظیمات وب‌آرتی‌سی و رله',
+    iceSettingsDesc:
+      'پیکربندی سرورهای STUN و TURN برای اتصال پایدار از طریق فایروال، اینترنت همراه (همراه اول/ایرانسل) و وی‌پی‌ان.',
+    turnRelay: 'فعال‌سازی رله TURN',
+    turnRelayDesc:
+      'در صورت مسدود بودن اتصال مستقیم به دلیل NAT متقارن یا وی‌پی‌ان، از سرورهای واسط امن (OpenRelay) استفاده می‌شود.',
+    activeIceServers: 'سرورهای فعال STUN و TURN',
+    customIceServers: 'سرورهای سفارشی (JSON)',
+    customIceServersDesc: 'امکان تعریف سرورهای اختصاصی RTCIceServer.',
+    resetDefaults: 'بازنشانی به پیش‌فرض',
+    save: 'ذخیره',
+    saved: 'ذخیره شد!',
   },
 }
 
