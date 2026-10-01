@@ -12,11 +12,10 @@ p2p-drop is a fast, completely server-less, browser-to-browser file transfer web
 
 ## Demo & Screenshots
 
-<!-- Demo GIF Placeholder -->
-![p2p-drop Demo GIF](https://placehold.co/800x450/4f46e5/ffffff?text=Demo+GIF+Placeholder+-+Add+demo.gif+here)
+![p2p-drop Demo](demo.gif)
 
-<!-- Screenshot Placeholder -->
-![p2p-drop UI Screenshot](https://placehold.co/800x450/1e293b/ffffff?text=App+Screenshot+-+Add+screenshot.png+here)
+![p2p-drop Screenshot](screenshot.png)
+
 
 ---
 
