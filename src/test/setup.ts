@@ -21,4 +21,39 @@ if (typeof window !== 'undefined') {
     URL.createObjectURL = () => 'blob:mock-url'
     URL.revokeObjectURL = () => {}
   }
+  if (typeof HTMLCanvasElement !== 'undefined') {
+    // @ts-expect-error - mock getContext in jsdom
+    HTMLCanvasElement.prototype.getContext = function () {
+      return {
+        fillRect: () => {},
+        clearRect: () => {},
+        getImageData: () => ({
+          data: new Uint8ClampedArray(4),
+          width: 1,
+          height: 1,
+        }),
+        putImageData: () => {},
+        createImageData: (w: number = 1, h: number = 1) => ({
+          data: new Uint8ClampedArray(w * h * 4),
+          width: w,
+          height: h,
+        }),
+        setTransform: () => {},
+        drawImage: () => {},
+        save: () => {},
+        restore: () => {},
+        beginPath: () => {},
+        moveTo: () => {},
+        lineTo: () => {},
+        closePath: () => {},
+        stroke: () => {},
+        translate: () => {},
+        scale: () => {},
+        rotate: () => {},
+        arc: () => {},
+        fill: () => {},
+      }
+    }
+  }
 }
+

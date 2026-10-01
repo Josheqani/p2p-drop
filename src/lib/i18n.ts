@@ -47,7 +47,13 @@ export interface TranslationStrings {
   download: string
   left: string
   languageToggle: string
+  showQr: string
+  hideQr: string
+  scanQr: string
+  cameraDenied: string
+  close: string
 }
+
 
 export const translations: Record<Language, TranslationStrings> = {
   en: {
@@ -95,6 +101,11 @@ export const translations: Record<Language, TranslationStrings> = {
     download: 'Download',
     left: 'left',
     languageToggle: 'فارسی',
+    showQr: 'Show QR',
+    hideQr: 'Hide QR',
+    scanQr: 'Scan QR with Camera',
+    cameraDenied: 'Camera access denied or unavailable. Please paste the code manually.',
+    close: 'Close',
   },
   fa: {
     title: 'پی‌توپی دراپ',
@@ -141,6 +152,11 @@ export const translations: Record<Language, TranslationStrings> = {
     download: 'دانلود',
     left: 'باقی‌مانده',
     languageToggle: 'English',
+    showQr: 'نمایش بارکد QR',
+    hideQr: 'بستن بارکد QR',
+    scanQr: 'اسکن بارکد با دوربین',
+    cameraDenied: 'دسترسی به دوربین رد شد یا در دسترس نیست. لطفاً کد را دستی وارد کنید.',
+    close: 'بستن',
   },
 }
 

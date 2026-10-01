@@ -5,6 +5,8 @@ import { useI18n } from '../lib/i18n'
 import { StatusBadge } from './StatusBadge'
 import { DropZone } from './DropZone'
 import { TransferList } from './TransferList'
+import { QrCodeDisplay } from './QrCodeDisplay'
+import { QrScannerModal } from './QrScannerModal'
 
 export function ConnectionPanel() {
   const { t } = useI18n()
@@ -16,6 +18,12 @@ export function ConnectionPanel() {
   const [inputCode, setInputCode] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [copied, setCopied] = useState<string | null>(null)
+
+  // QR display & scanning states
+  const [showOfferQr, setShowOfferQr] = useState(false)
+  const [showAnswerQr, setShowAnswerQr] = useState(false)
+  const [isScannerOpen, setIsScannerOpen] = useState(false)
+  const [scannerTarget, setScannerTarget] = useState<'offer' | 'answer' | null>(null)
 
   const [transfers, setTransfers] = useState<TransferItem[]>([])
   const [, startTransition] = useTransition()
@@ -86,8 +94,9 @@ export function ConnectionPanel() {
     setAnswerCode('')
   }
 
-  const handleAcceptOffer = async () => {
-    if (!inputCode.trim()) return
+  const handleAcceptOffer = async (codeToUse?: string) => {
+    const targetCode = (codeToUse ?? inputCode).trim()
+    if (!targetCode) return
     setError(null)
     const p = new PeerConnection()
     peerRef.current = p
@@ -95,18 +104,19 @@ export function ConnectionPanel() {
     setupPeerListeners(p)
 
     try {
-      const ans = await p.acceptOffer(inputCode.trim())
+      const ans = await p.acceptOffer(targetCode)
       setAnswerCode(ans)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to process offer')
     }
   }
 
-  const handleAcceptAnswer = async () => {
-    if (!peer || !inputCode.trim()) return
+  const handleAcceptAnswer = async (codeToUse?: string) => {
+    const targetCode = (codeToUse ?? inputCode).trim()
+    if (!peer || !targetCode) return
     setError(null)
     try {
-      await peer.acceptAnswer(inputCode.trim())
+      await peer.acceptAnswer(targetCode)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to process answer')
     }
@@ -138,8 +148,25 @@ export function ConnectionPanel() {
     setOfferCode('')
     setAnswerCode('')
     setInputCode('')
+    setShowOfferQr(false)
+    setShowAnswerQr(false)
+    setIsScannerOpen(false)
     setError(null)
     setTransfers([])
+  }
+
+  const handleOpenScanner = (target: 'offer' | 'answer') => {
+    setScannerTarget(target)
+    setIsScannerOpen(true)
+  }
+
+  const handleScannedCode = (scanned: string) => {
+    setInputCode(scanned)
+    if (scannerTarget === 'offer') {
+      handleAcceptOffer(scanned)
+    } else if (scannerTarget === 'answer') {
+      handleAcceptAnswer(scanned)
+    }
   }
 
   return (
@@ -195,9 +222,28 @@ export function ConnectionPanel() {
       {mode === 'create' && state !== 'connected' && (
         <div className="space-y-4">
           <div>
-            <label htmlFor="offer-code-output" className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-              {t('offerCodeLabel')}
-            </label>
+            <div className="flex items-center justify-between mb-1">
+              <label htmlFor="offer-code-output" className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                {t('offerCodeLabel')}
+              </label>
+              {offerCode && (
+                <button
+                  type="button"
+                  data-testid="toggle-offer-qr-btn"
+                  onClick={() => setShowOfferQr(!showOfferQr)}
+                  className="text-xs text-indigo-600 dark:text-indigo-400 hover:underline font-medium"
+                >
+                  {showOfferQr ? t('hideQr') : t('showQr')}
+                </button>
+              )}
+            </div>
+
+            {showOfferQr && offerCode && (
+              <div className="mb-3">
+                <QrCodeDisplay data={offerCode} />
+              </div>
+            )}
+
             <div className="relative">
               <textarea
                 id="offer-code-output"
@@ -221,9 +267,19 @@ export function ConnectionPanel() {
           </div>
 
           <div>
-            <label htmlFor="paste-answer-input" className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-              {t('pasteAnswerLabel')}
-            </label>
+            <div className="flex items-center justify-between mb-1">
+              <label htmlFor="paste-answer-input" className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                {t('pasteAnswerLabel')}
+              </label>
+              <button
+                type="button"
+                data-testid="scan-answer-qr-btn"
+                onClick={() => handleOpenScanner('answer')}
+                className="text-xs text-indigo-600 dark:text-indigo-400 hover:underline font-medium"
+              >
+                📷 {t('scanQr')}
+              </button>
+            </div>
             <textarea
               id="paste-answer-input"
               data-testid="paste-answer-input"
@@ -234,7 +290,7 @@ export function ConnectionPanel() {
               className="w-full text-xs font-mono p-2.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 resize-none focus:outline-hidden focus:ring-2 focus:ring-indigo-500"
             />
             <button
-              onClick={handleAcceptAnswer}
+              onClick={() => handleAcceptAnswer()}
               disabled={!inputCode.trim() || state === 'connecting'}
               data-testid="connect-answer-btn"
               className="mt-2 w-full py-2 px-4 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white rounded-lg text-xs font-semibold transition focus:outline-hidden focus:ring-2 focus:ring-emerald-500"
@@ -249,9 +305,19 @@ export function ConnectionPanel() {
       {mode === 'join' && state !== 'connected' && (
         <div className="space-y-4">
           <div>
-            <label htmlFor="paste-offer-input" className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-              {t('pasteOfferLabel')}
-            </label>
+            <div className="flex items-center justify-between mb-1">
+              <label htmlFor="paste-offer-input" className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                {t('pasteOfferLabel')}
+              </label>
+              <button
+                type="button"
+                data-testid="scan-offer-qr-btn"
+                onClick={() => handleOpenScanner('offer')}
+                className="text-xs text-indigo-600 dark:text-indigo-400 hover:underline font-medium"
+              >
+                📷 {t('scanQr')}
+              </button>
+            </div>
             <textarea
               id="paste-offer-input"
               data-testid="paste-offer-input"
@@ -263,7 +329,7 @@ export function ConnectionPanel() {
             />
             {!answerCode && (
               <button
-                onClick={handleAcceptOffer}
+                onClick={() => handleAcceptOffer()}
                 disabled={!inputCode.trim() || state === 'creating'}
                 data-testid="generate-answer-btn"
                 className="mt-2 w-full py-2 px-4 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white rounded-lg text-xs font-semibold transition focus:outline-hidden focus:ring-2 focus:ring-indigo-500"
@@ -275,9 +341,26 @@ export function ConnectionPanel() {
 
           {answerCode && (
             <div>
-              <label htmlFor="answer-code-output" className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                {t('answerCodeLabel')}
-              </label>
+              <div className="flex items-center justify-between mb-1">
+                <label htmlFor="answer-code-output" className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                  {t('answerCodeLabel')}
+                </label>
+                <button
+                  type="button"
+                  data-testid="toggle-answer-qr-btn"
+                  onClick={() => setShowAnswerQr(!showAnswerQr)}
+                  className="text-xs text-indigo-600 dark:text-indigo-400 hover:underline font-medium"
+                >
+                  {showAnswerQr ? t('hideQr') : t('showQr')}
+                </button>
+              </div>
+
+              {showAnswerQr && (
+                <div className="mb-3">
+                  <QrCodeDisplay data={answerCode} />
+                </div>
+              )}
+
               <div className="relative">
                 <textarea
                   id="answer-code-output"
@@ -321,6 +404,13 @@ export function ConnectionPanel() {
           <TransferList transfers={transfers} onCancel={handleCancelTransfer} />
         </div>
       )}
+
+      {/* Camera QR Scanner Modal */}
+      <QrScannerModal
+        isOpen={isScannerOpen}
+        onClose={() => setIsScannerOpen(false)}
+        onScan={handleScannedCode}
+      />
     </div>
   )
 }
