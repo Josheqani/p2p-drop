@@ -1,5 +1,7 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useTransition } from 'react'
 import { PeerConnection, PeerState } from '../lib/peer'
+import { TransferManager, TransferItem } from '../lib/transfer'
+import { formatBytes, formatSpeed, formatTime } from '../lib/format'
 
 export function ConnectionPanel() {
   const [peer, setPeer] = useState<PeerConnection | null>(null)
@@ -11,14 +13,19 @@ export function ConnectionPanel() {
   const [error, setError] = useState<string | null>(null)
   const [copied, setCopied] = useState<string | null>(null)
 
-  // Message test state
-  const [messages, setMessages] = useState<Array<{ sender: 'self' | 'peer'; text: string; time: string }>>([])
-  const [messageInput, setMessageInput] = useState('')
+  // File transfers state
+  const [transfers, setTransfers] = useState<TransferItem[]>([])
+  const [, startTransition] = useTransition()
 
   const peerRef = useRef<PeerConnection | null>(null)
+  const transferManagerRef = useRef<TransferManager | null>(null)
+  const fileInputRef = useRef<HTMLInputElement | null>(null)
 
   useEffect(() => {
     return () => {
+      if (transferManagerRef.current) {
+        transferManagerRef.current.detachChannel()
+      }
       if (peerRef.current) {
         peerRef.current.close()
       }
@@ -35,20 +42,32 @@ export function ConnectionPanel() {
     }
   }
 
+  const setupPeerListeners = (p: PeerConnection) => {
+    p.onStateChange((s) => {
+      setState(s)
+      if (s === 'connected' && p.dataChannel) {
+        const tm = new TransferManager(p.dataChannel)
+        transferManagerRef.current = tm
+        tm.onTransfersChange((list) => {
+          startTransition(() => {
+            setTransfers(list)
+          })
+        })
+      } else if (s === 'closed' || s === 'failed') {
+        if (transferManagerRef.current) {
+          transferManagerRef.current.detachChannel()
+        }
+      }
+    })
+  }
+
   const handleCreate = async () => {
     setError(null)
     setMode('create')
     const p = new PeerConnection()
     peerRef.current = p
     setPeer(p)
-
-    p.onStateChange((s) => setState(s))
-    p.onMessage((data) => {
-      if (typeof data === 'string') {
-        const time = new Date().toLocaleTimeString()
-        setMessages((prev) => [...prev, { sender: 'peer', text: data, time }])
-      }
-    })
+    setupPeerListeners(p)
 
     try {
       const code = await p.createOffer()
@@ -71,14 +90,7 @@ export function ConnectionPanel() {
     const p = new PeerConnection()
     peerRef.current = p
     setPeer(p)
-
-    p.onStateChange((s) => setState(s))
-    p.onMessage((data) => {
-      if (typeof data === 'string') {
-        const time = new Date().toLocaleTimeString()
-        setMessages((prev) => [...prev, { sender: 'peer', text: data, time }])
-      }
-    })
+    setupPeerListeners(p)
 
     try {
       const ans = await p.acceptOffer(inputCode.trim())
@@ -98,19 +110,33 @@ export function ConnectionPanel() {
     }
   }
 
-  const handleSendMessage = () => {
-    if (!peer || !messageInput.trim() || state !== 'connected') return
-    try {
-      peer.send(messageInput)
-      const time = new Date().toLocaleTimeString()
-      setMessages((prev) => [...prev, { sender: 'self', text: messageInput, time }])
-      setMessageInput('')
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to send message')
+  const handleFilesSelected = (files: FileList | null) => {
+    if (!files || files.length === 0 || !transferManagerRef.current) return
+    transferManagerRef.current.sendFiles(files)
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ''
+    }
+  }
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault()
+    if (!transferManagerRef.current) return
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      transferManagerRef.current.sendFiles(e.dataTransfer.files)
+    }
+  }
+
+  const handleCancelTransfer = (id: string) => {
+    if (transferManagerRef.current) {
+      transferManagerRef.current.cancelTransfer(id)
     }
   }
 
   const handleReset = () => {
+    if (transferManagerRef.current) {
+      transferManagerRef.current.detachChannel()
+      transferManagerRef.current = null
+    }
     if (peerRef.current) {
       peerRef.current.close()
       peerRef.current = null
@@ -122,7 +148,7 @@ export function ConnectionPanel() {
     setAnswerCode('')
     setInputCode('')
     setError(null)
-    setMessages([])
+    setTransfers([])
   }
 
   return (
@@ -299,75 +325,145 @@ export function ConnectionPanel() {
         </div>
       )}
 
-      {/* Connected - Debug & Message Test */}
+      {/* Connected View: File Transfer Protocol */}
       {state === 'connected' && (
-        <div className="space-y-4 pt-2 border-t border-slate-200 dark:border-slate-700">
+        <div className="space-y-5 pt-2 border-t border-slate-200 dark:border-slate-700">
           <div className="flex items-center justify-between">
             <h2 className="text-sm font-semibold text-slate-800 dark:text-slate-200">
-              Direct P2P Data Channel Ready
+              P2P File Transfer
             </h2>
-            <span className="text-xs text-emerald-600 dark:text-emerald-400 font-medium">● Live</span>
+            <span className="text-xs text-emerald-600 dark:text-emerald-400 font-medium">● Connected</span>
           </div>
 
-          {/* Messages list */}
+          {/* Drag & Drop Area */}
           <div
-            data-testid="messages-container"
-            className="h-40 overflow-y-auto p-3 bg-slate-50 dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700 space-y-2 text-xs"
-          >
-            {messages.length === 0 ? (
-              <p className="text-slate-600 dark:text-slate-400 italic text-center py-4">
-                No messages yet. Send a test message below.
-              </p>
-            ) : (
-              messages.map((m, idx) => (
-                <div
-                  key={idx}
-                  className={`flex flex-col ${
-                    m.sender === 'self' ? 'items-end' : 'items-start'
-                  }`}
-                >
-                  <div
-                    className={`max-w-[80%] rounded-lg px-3 py-1.5 ${
-                      m.sender === 'self'
-                        ? 'bg-indigo-600 text-white'
-                        : 'bg-slate-200 dark:bg-slate-700 text-slate-900 dark:text-slate-100'
-                    }`}
-                  >
-                    <p>{m.text}</p>
-                  </div>
-                  <span className="text-[10px] text-slate-600 dark:text-slate-400 mt-0.5">
-                    {m.sender === 'self' ? 'You' : 'Peer'} • {m.time}
-                  </span>
-                </div>
-              ))
-            )}
-          </div>
-
-          {/* Message input */}
-          <form
-            onSubmit={(e) => {
-              e.preventDefault()
-              handleSendMessage()
-            }}
-            className="flex gap-2"
+            onDragOver={(e) => e.preventDefault()}
+            onDrop={handleDrop}
+            data-testid="drop-zone"
+            className="border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-indigo-500 dark:hover:border-indigo-500 rounded-xl p-6 text-center transition cursor-pointer bg-slate-50/50 dark:bg-slate-800/50"
+            onClick={() => fileInputRef.current?.click()}
           >
             <input
-              type="text"
-              data-testid="message-input"
-              value={messageInput}
-              onChange={(e) => setMessageInput(e.target.value)}
-              placeholder="Type a test message..."
-              className="flex-1 text-xs px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              type="file"
+              multiple
+              ref={fileInputRef}
+              data-testid="file-picker-input"
+              className="hidden"
+              onChange={(e) => handleFilesSelected(e.target.files)}
             />
-            <button
-              type="submit"
-              data-testid="send-message-btn"
-              disabled={!messageInput.trim()}
-              className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white rounded-lg text-xs font-semibold transition"
-            >
-              Send
-            </button>
-          </form>
+            <div className="flex flex-col items-center">
+              <svg className="w-8 h-8 text-indigo-500 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+              </svg>
+              <p className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                Drag & drop files here, or <span className="text-indigo-600 dark:text-indigo-400 underline">browse</span>
+              </p>
+              <p className="text-[11px] text-slate-600 dark:text-slate-400 mt-1">
+                Any file size • Transferred directly peer-to-peer
+              </p>
+            </div>
+          </div>
+
+          {/* Transfer List */}
+          {transfers.length > 0 && (
+            <div className="space-y-3" data-testid="transfers-list">
+              <h3 className="text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                Transfers ({transfers.length})
+              </h3>
+              <div className="space-y-2 max-h-64 overflow-y-auto pe-1">
+                {transfers.map((item) => {
+                  const percent = item.size > 0 ? Math.min(100, Math.round((item.transferred / item.size) * 100)) : 0
+                  return (
+                    <div
+                      key={item.id}
+                      data-testid={`transfer-item-${item.id}`}
+                      className="p-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xs space-y-2"
+                    >
+                      <div className="flex items-center justify-between text-xs">
+                        <div className="flex items-center space-x-2 rtl:space-x-reverse min-w-0">
+                          <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded ${
+                            item.direction === 'send'
+                              ? 'bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-300'
+                              : 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300'
+                          }`}>
+                            {item.direction === 'send' ? 'SEND' : 'RECV'}
+                          </span>
+                          <span className="font-medium truncate max-w-[180px] sm:max-w-[220px]" title={item.name}>
+                            {item.name}
+                          </span>
+                        </div>
+                        <span className="text-slate-600 dark:text-slate-400 text-[11px]">
+                          {formatBytes(item.size)}
+                        </span>
+                      </div>
+
+                      {/* Progress Bar */}
+                      <div className="w-full bg-slate-100 dark:bg-slate-700 rounded-full h-1.5 overflow-hidden">
+                        <div
+                          className={`h-1.5 rounded-full transition-all duration-200 ${
+                            item.status === 'completed'
+                              ? 'bg-emerald-500'
+                              : item.status === 'failed' || item.status === 'cancelled'
+                              ? 'bg-rose-500'
+                              : 'bg-indigo-600'
+                          }`}
+                          style={{ width: `${percent}%` }}
+                        />
+                      </div>
+
+                      {/* Status / Speed / Actions */}
+                      <div className="flex items-center justify-between text-[11px] text-slate-600 dark:text-slate-400">
+                        <div>
+                          {item.status === 'transferring' && (
+                            <span>
+                              {percent}% • {formatSpeed(item.speed)} • {formatTime(item.remainingSeconds)} left
+                            </span>
+                          )}
+                          {item.status === 'queued' && <span className="italic">Queued...</span>}
+                          {item.status === 'completed' && (
+                            <span className="text-emerald-600 dark:text-emerald-400 font-medium">
+                              ✓ Completed
+                            </span>
+                          )}
+                          {item.status === 'cancelled' && (
+                            <span className="text-amber-600 dark:text-amber-400 font-medium">
+                              Cancelled
+                            </span>
+                          )}
+                          {item.status === 'failed' && (
+                            <span className="text-rose-600 dark:text-rose-400 font-medium" title={item.error}>
+                              ✕ Failed ({item.error || 'Error'})
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="flex items-center space-x-2 rtl:space-x-reverse">
+                          {(item.status === 'transferring' || item.status === 'queued') && (
+                            <button
+                              onClick={() => handleCancelTransfer(item.id)}
+                              className="text-rose-600 dark:text-rose-400 hover:underline font-medium text-[11px]"
+                            >
+                              Cancel
+                            </button>
+                          )}
+                          {item.direction === 'receive' && item.status === 'completed' && item.blobUrl && (
+                            <a
+                              href={item.blobUrl}
+                              download={item.name}
+                              data-testid="download-file-btn"
+                              className="px-2 py-0.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-[11px] font-medium shadow-xs"
+                            >
+                              Download
+                            </a>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>
