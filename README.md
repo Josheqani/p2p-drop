@@ -1,7 +1,7 @@
 # p2p-drop
 
 [![CI](https://github.com/Josheqani/p2p-drop/actions/workflows/ci.yml/badge.svg)](https://github.com/Josheqani/p2p-drop/actions/workflows/ci.yml)
-[![Live Site](https://img.shields.io/badge/Live_Site-p2p--drop.pages.dev-emerald?style=flat&logo=cloudflare)](https://p2p-drop.pages.dev)
+[![Live Site](https://img.shields.io/badge/Live_Site-workers.dev-emerald?style=flat&logo=cloudflare)](https://p2p-drop.josheqani-824.workers.dev)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 > 🛸 Yeet files directly browser-to-browser with WebRTC magic! No servers, no clouds, zero trust issues. 🪂⚡️
