@@ -1,3 +1,5 @@
+import { useState, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { DeviceInfo } from '../lib/deviceInfo'
 import { useI18n } from '../lib/i18n'
 
@@ -15,8 +17,13 @@ export function JoinRequestModal({
   onDecline,
 }: JoinRequestModalProps) {
   const { t } = useI18n()
+  const [mounted, setMounted] = useState(false)
 
-  if (!isOpen || !joinerInfo) return null
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  if (!isOpen || !joinerInfo || !mounted) return null
 
   const renderDeviceGlyph = (type: DeviceInfo['deviceType']) => {
     switch (type) {
@@ -46,14 +53,14 @@ export function JoinRequestModal({
     }
   }
 
-  return (
+  const modalContent = (
     <div
       role="dialog"
       aria-modal="true"
       aria-labelledby="join-request-title"
-      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/40 backdrop-blur-md animate-in fade-in duration-200 overflow-hidden"
+      className="fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-md animate-in fade-in duration-200 overflow-hidden"
     >
-      <div className="w-full max-w-[420px] max-h-[calc(100dvh-2rem)] overflow-y-auto bg-white/95 dark:bg-[#1E1E20]/95 backdrop-blur-2xl rounded-[24px] shadow-[0_24px_64px_rgba(0,0,0,0.24)] border border-black/[0.08] dark:border-white/[0.12] p-6 space-y-5 text-start animate-in zoom-in-95 duration-150">
+      <div className="w-full max-w-[420px] max-h-[85vh] overflow-y-auto bg-white/95 dark:bg-[#1E1E20]/95 backdrop-blur-2xl rounded-[24px] shadow-[0_24px_64px_rgba(0,0,0,0.3)] border border-black/[0.08] dark:border-white/[0.12] p-6 space-y-5 text-start animate-in zoom-in-95 duration-150">
         <div className="flex items-center space-x-3.5">
           <div className="w-12 h-12 rounded-2xl bg-[#007AFF]/12 dark:bg-[#0A84FF]/20 flex items-center justify-center shrink-0">
             {renderDeviceGlyph(joinerInfo.deviceType)}
@@ -125,4 +132,6 @@ export function JoinRequestModal({
       </div>
     </div>
   )
+
+  return createPortal(modalContent, document.body)
 }

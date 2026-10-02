@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, useId } from 'react'
+import { createPortal } from 'react-dom'
 import jsQR from 'jsqr'
 import { QrAssembler } from '../lib/qr'
 import { useI18n } from '../lib/i18n'
@@ -175,12 +176,12 @@ export function QrScannerModal({ isOpen, onClose, onScan }: QrScannerModalProps)
 
   if (!isOpen) return null
 
-  return (
+  const modalContent = (
     <div
       role="dialog"
       aria-modal="true"
       aria-labelledby={titleId}
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-md animate-in fade-in duration-150"
+      className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-in fade-in duration-150"
     >
       <div className="w-full max-w-sm bg-black rounded-[24px] shadow-2xl border border-white/15 overflow-hidden animate-in zoom-in-95 duration-150 text-white">
         {/* Navigation Header */}
@@ -192,7 +193,7 @@ export function QrScannerModal({ isOpen, onClose, onScan }: QrScannerModalProps)
             type="button"
             onClick={onClose}
             data-testid="close-scanner-btn"
-            className="w-7 h-7 rounded-full bg-white/15 hover:bg-white/25 active:scale-95 text-white/80 hover:text-white flex items-center justify-center transition-all text-xs focus-visible:outline-none"
+            className="w-7 h-7 rounded-full bg-white/15 hover:bg-white/25 active:scale-95 text-white/80 hover:text-white flex items-center justify-center transition-all text-xs focus-visible:outline-none cursor-pointer"
             aria-label={t('close')}
           >
             ✕
@@ -207,7 +208,7 @@ export function QrScannerModal({ isOpen, onClose, onScan }: QrScannerModalProps)
               <button
                 type="button"
                 onClick={onClose}
-                className="px-4 py-2 bg-white text-black text-xs font-semibold rounded-full shadow-xs active:scale-95 transition"
+                className="px-4 py-2 bg-white text-black text-xs font-semibold rounded-full shadow-xs active:scale-95 transition cursor-pointer"
               >
                 {t('close')}
               </button>
@@ -245,4 +246,6 @@ export function QrScannerModal({ isOpen, onClose, onScan }: QrScannerModalProps)
       </div>
     </div>
   )
+
+  return typeof document !== 'undefined' ? createPortal(modalContent, document.body) : modalContent
 }

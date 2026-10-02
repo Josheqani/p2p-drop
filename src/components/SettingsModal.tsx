@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { useI18n } from '../lib/i18n'
 import {
   DEFAULT_ICE_SERVERS,
@@ -20,6 +21,11 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const [customJson, setCustomJson] = useState('')
   const [jsonError, setJsonError] = useState<string | null>(null)
   const [savedNotice, setSavedNotice] = useState(false)
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   useEffect(() => {
     if (isOpen) {
@@ -31,7 +37,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     }
   }, [isOpen])
 
-  if (!isOpen) return null
+  if (!isOpen || !mounted) return null
 
   const handleToggleTurn = (checked: boolean) => {
     setTurnEnabledState(checked)
@@ -64,9 +70,9 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     setTimeout(() => setSavedNotice(false), 2000)
   }
 
-  return (
+  const modalContent = (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/40 backdrop-blur-md animate-in fade-in duration-150 overflow-hidden"
+      className="fixed inset-0 z-[9999] flex items-center justify-center p-4 sm:p-6 bg-black/60 backdrop-blur-md animate-in fade-in duration-200"
       role="dialog"
       aria-modal="true"
       aria-labelledby="settings-modal-title"
@@ -74,9 +80,9 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
         if (e.target === e.currentTarget) onClose()
       }}
     >
-      <div className="w-full max-w-[480px] max-h-[calc(100dvh-2rem)] flex flex-col rounded-[24px] bg-white/95 dark:bg-[#1E1E20]/95 backdrop-blur-2xl shadow-[0_24px_64px_rgba(0,0,0,0.24)] border border-black/[0.08] dark:border-white/[0.12] text-start animate-in zoom-in-95 duration-150 overflow-hidden">
-        {/* Fixed Header */}
-        <div className="flex items-center justify-between px-6 pt-5 pb-3 border-b border-black/[0.06] dark:border-white/[0.08] shrink-0 bg-transparent">
+      <div className="w-full max-w-[480px] max-h-[85vh] flex flex-col rounded-[24px] bg-white/95 dark:bg-[#1E1E20]/95 backdrop-blur-2xl shadow-[0_24px_64px_rgba(0,0,0,0.3)] border border-black/[0.08] dark:border-white/[0.12] text-start animate-in zoom-in-95 duration-150 overflow-hidden">
+        {/* Navigation Header */}
+        <div className="flex items-center justify-between px-6 pt-5 pb-3.5 border-b border-black/[0.06] dark:border-white/[0.08] shrink-0 bg-transparent">
           <div className="flex items-center space-x-2.5">
             <div className="w-8 h-8 rounded-full bg-[#767680]/12 dark:bg-[#767680]/24 flex items-center justify-center text-[#007AFF] dark:text-[#0A84FF]">
               <svg className="w-4.5 h-4.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -233,4 +239,6 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
       </div>
     </div>
   )
+
+  return createPortal(modalContent, document.body)
 }
