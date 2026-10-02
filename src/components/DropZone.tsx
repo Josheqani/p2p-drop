@@ -1,4 +1,4 @@
-import { useRef } from 'react'
+import { useRef, useState } from 'react'
 import { useI18n } from '../lib/i18n'
 
 interface DropZoneProps {
@@ -9,13 +9,24 @@ interface DropZoneProps {
 export function DropZone({ onFilesSelected, disabled = false }: DropZoneProps) {
   const { t } = useI18n()
   const fileInputRef = useRef<HTMLInputElement | null>(null)
+  const [isDragOver, setIsDragOver] = useState(false)
 
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault()
+    setIsDragOver(false)
     if (disabled) return
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
       onFilesSelected(e.dataTransfer.files)
     }
+  }
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault()
+    if (!disabled) setIsDragOver(true)
+  }
+
+  const handleDragLeave = () => {
+    setIsDragOver(false)
   }
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -30,14 +41,17 @@ export function DropZone({ onFilesSelected, disabled = false }: DropZoneProps) {
       role="button"
       tabIndex={disabled ? -1 : 0}
       aria-label={`${t('dropFilesPrompt')} ${t('browse')}`}
-      onDragOver={(e) => e.preventDefault()}
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
       onDrop={handleDrop}
       onClick={() => !disabled && fileInputRef.current?.click()}
       onKeyDown={handleKeyDown}
       data-testid="drop-zone"
-      className={`border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-indigo-500 dark:hover:border-indigo-500 rounded-xl p-6 text-center transition cursor-pointer bg-slate-50/50 dark:bg-slate-800/50 focus:outline-hidden focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-slate-900 ${
-        disabled ? 'opacity-50 cursor-not-allowed pointer-events-none' : ''
-      }`}
+      className={`group relative rounded-[20px] p-7 text-center transition-all duration-200 cursor-pointer select-none border-2 border-dashed ${
+        isDragOver
+          ? 'border-[#007AFF] bg-[#007AFF]/8 dark:bg-[#0A84FF]/12 scale-[1.01]'
+          : 'border-[#767680]/25 dark:border-[#767680]/35 bg-[#767680]/5 dark:bg-[#767680]/10 hover:border-[#007AFF]/60 dark:hover:border-[#0A84FF]/60 hover:bg-[#767680]/8 dark:hover:bg-[#767680]/16'
+      } ${disabled ? 'opacity-50 cursor-not-allowed pointer-events-none' : ''} focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#007AFF]`}
     >
       <input
         type="file"
@@ -52,26 +66,39 @@ export function DropZone({ onFilesSelected, disabled = false }: DropZoneProps) {
           }
         }}
       />
+
       <div className="flex flex-col items-center">
-        <svg
-          className="w-8 h-8 text-indigo-500 mb-2"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-          aria-hidden="true"
+        {/* Apple AirDrop Style Center Icon */}
+        <div
+          className={`w-12 h-12 rounded-full mb-3 flex items-center justify-center transition-all duration-200 ${
+            isDragOver
+              ? 'bg-[#007AFF] text-white shadow-[0_4px_16px_rgba(0,122,255,0.4)] scale-110'
+              : 'bg-[#007AFF]/10 dark:bg-[#0A84FF]/15 text-[#007AFF] dark:text-[#0A84FF] group-hover:scale-105'
+          }`}
         >
-          <path
+          <svg
+            className="w-6 h-6"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth="2"
             strokeLinecap="round"
             strokeLinejoin="round"
-            strokeWidth={1.5}
-            d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
-          />
-        </svg>
-        <p className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+            aria-hidden="true"
+          >
+            <path d="M12 16V4m0 0l-4 4m4-4l4 4" />
+            <path d="M20 16.5a4.5 4.5 0 0 1-4.5 4.5h-7A4.5 4.5 0 0 1 4 16.5" />
+          </svg>
+        </div>
+
+        <p className="text-[13px] font-semibold text-[#1D1D1F] dark:text-[#F5F5F7] tracking-tight">
           {t('dropFilesPrompt')}{' '}
-          <span className="text-indigo-600 dark:text-indigo-400 underline">{t('browse')}</span>
+          <span className="text-[#007AFF] dark:text-[#0A84FF] hover:underline cursor-pointer">
+            {t('browse')}
+          </span>
         </p>
-        <p className="text-[11px] text-slate-600 dark:text-slate-400 mt-1">
+
+        <p className="text-[11px] text-[#86868B] dark:text-[#98989D] mt-1 font-normal">
           {t('dropFilesSubtext')}
         </p>
       </div>

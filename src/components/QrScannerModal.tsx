@@ -74,7 +74,6 @@ export function QrScannerModal({ isOpen, onClose, onScan }: QrScannerModalProps)
       }
     }
 
-
     function startScanning(asm: QrAssembler) {
       const hasBarcodeDetector = 'BarcodeDetector' in window
 
@@ -124,7 +123,6 @@ export function QrScannerModal({ isOpen, onClose, onScan }: QrScannerModalProps)
             }
 
             if (!detectedCode) {
-              // jsQR fallback
               if (!canvasRef.current) {
                 canvasRef.current = document.createElement('canvas')
               }
@@ -182,20 +180,22 @@ export function QrScannerModal({ isOpen, onClose, onScan }: QrScannerModalProps)
       role="dialog"
       aria-modal="true"
       aria-labelledby={titleId}
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-xs"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-md animate-in fade-in duration-150"
     >
-      <div className="w-full max-w-sm bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
-        {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-slate-200 dark:border-slate-700">
-          <h2 id={titleId} className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+      <div className="w-full max-w-sm bg-black rounded-[24px] shadow-2xl border border-white/15 overflow-hidden animate-in zoom-in-95 duration-150 text-white">
+        {/* Navigation Header */}
+        <div className="flex items-center justify-between p-4 border-b border-white/10 bg-[#1C1C1E]/80 backdrop-blur-xl">
+          <h2 id={titleId} className="text-[15px] font-semibold text-white tracking-tight">
             {t('scanQr')}
           </h2>
           <button
+            type="button"
             onClick={onClose}
             data-testid="close-scanner-btn"
-            className="text-xs px-2 py-1 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 rounded-md"
+            className="w-7 h-7 rounded-full bg-white/15 hover:bg-white/25 active:scale-95 text-white/80 hover:text-white flex items-center justify-center transition-all text-xs focus-visible:outline-none"
+            aria-label={t('close')}
           >
-            ✕ {t('close')}
+            ✕
           </button>
         </div>
 
@@ -203,10 +203,11 @@ export function QrScannerModal({ isOpen, onClose, onScan }: QrScannerModalProps)
         <div className="relative aspect-square bg-black flex items-center justify-center overflow-hidden">
           {cameraError ? (
             <div className="p-6 text-center space-y-3">
-              <p className="text-xs text-rose-300">{cameraError}</p>
+              <p className="text-[13px] text-[#FF453A] font-medium leading-relaxed">{cameraError}</p>
               <button
+                type="button"
                 onClick={onClose}
-                className="px-3 py-1.5 bg-white text-slate-900 text-xs font-medium rounded-lg shadow-xs"
+                className="px-4 py-2 bg-white text-black text-xs font-semibold rounded-full shadow-xs active:scale-95 transition"
               >
                 {t('close')}
               </button>
@@ -218,21 +219,21 @@ export function QrScannerModal({ isOpen, onClose, onScan }: QrScannerModalProps)
                 data-testid="scanner-video"
                 className="w-full h-full object-cover"
               />
-              {/* Aiming Reticle */}
-              <div className="absolute inset-10 border-2 border-indigo-400/80 rounded-2xl pointer-events-none shadow-2xl animate-pulse" />
+              {/* Apple Camera Scanner Reticle */}
+              <div className="absolute inset-10 border-2 border-white/80 rounded-[20px] pointer-events-none shadow-[0_0_0_9999px_rgba(0,0,0,0.4)]" />
 
-              {/* Multi-frame reassembly progress badge */}
+              {/* Multi-frame progress badge */}
               {scanProgress && scanProgress.total > 1 && (
                 <div
                   data-testid="scan-progress-badge"
-                  className="absolute bottom-3 inset-x-4 bg-slate-900/85 backdrop-blur-xs text-white text-[11px] p-2 rounded-lg text-center"
+                  className="absolute bottom-4 inset-x-4 bg-[#1C1C1E]/85 backdrop-blur-xl text-white text-[12px] p-3 rounded-[16px] text-center border border-white/10 shadow-lg"
                 >
-                  <p className="font-medium mb-1">
+                  <p className="font-semibold mb-1.5">
                     Captured {scanProgress.received} of {scanProgress.total} frames ({scanProgress.percent}%)
                   </p>
-                  <div className="w-full bg-slate-700 h-1.5 rounded-full overflow-hidden">
+                  <div className="w-full bg-white/20 h-1.5 rounded-full overflow-hidden">
                     <div
-                      className="bg-indigo-500 h-full transition-all duration-150"
+                      className="bg-[#0A84FF] h-full transition-all duration-150 rounded-full"
                       style={{ width: `${scanProgress.percent}%` }}
                     />
                   </div>

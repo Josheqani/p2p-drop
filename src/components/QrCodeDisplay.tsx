@@ -30,8 +30,8 @@ export function QrCodeDisplay({ data, size = 220 }: QrCodeDisplayProps) {
       width: size,
       margin: 1,
       color: {
-        dark: '#0f172a',
-        light: '#ffffff',
+        dark: '#1D1D1F',
+        light: '#FFFFFF',
       },
       errorCorrectionLevel: 'M',
     }).catch((err) => {
@@ -42,14 +42,14 @@ export function QrCodeDisplay({ data, size = 220 }: QrCodeDisplayProps) {
   if (!data) return null
 
   return (
-    <div className="flex flex-col items-center justify-center p-3 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 shadow-xs">
-      <div className="p-2 bg-white rounded-lg shadow-2xs">
-        <canvas ref={canvasRef} data-testid="qr-canvas" className="rounded" />
+    <div className="flex flex-col items-center justify-center p-4 bg-[#F8F8FA] dark:bg-[#2C2C2E] rounded-[20px] border border-black/[0.04] dark:border-white/[0.06] shadow-xs">
+      <div className="p-3 bg-white rounded-[16px] shadow-[0_2px_8px_rgba(0,0,0,0.06)]">
+        <canvas ref={canvasRef} data-testid="qr-canvas" className="rounded-[10px]" />
       </div>
 
       {chunks.length > 1 && (
-        <div className="mt-2 flex items-center space-x-2 rtl:space-x-reverse text-xs text-slate-600 dark:text-slate-400">
-          <span className="inline-block h-2 w-2 rounded-full bg-indigo-600 animate-ping" />
+        <div className="mt-3 flex items-center space-x-2 text-[11px] font-medium text-[#007AFF] dark:text-[#0A84FF] bg-[#007AFF]/10 dark:bg-[#0A84FF]/20 px-3 py-1 rounded-full">
+          <span className="inline-block h-1.5 w-1.5 rounded-full bg-[#007AFF] dark:bg-[#0A84FF] animate-ping" />
           <span data-testid="qr-frame-counter">
             Frame {frameIndex + 1} of {chunks.length}
           </span>

@@ -220,16 +220,17 @@ export function ConnectionPanel() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       {/* Top Header Controls: Status & Disconnect Button */}
       <div className="flex items-center justify-between">
         <StatusBadge state={state} />
 
         {state !== 'idle' && (
           <button
+            type="button"
             onClick={handleReset}
             data-testid="reset-connection-btn"
-            className="text-xs text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 transition focus:outline-hidden"
+            className="text-[12px] font-medium text-[#86868B] hover:text-[#FF3B30] dark:text-[#98989D] dark:hover:text-[#FF453A] transition-colors focus-visible:outline-none cursor-pointer"
           >
             {t('resetOrDisconnect')}
           </button>
@@ -240,7 +241,7 @@ export function ConnectionPanel() {
       {error && (
         <div
           role="alert"
-          className="p-3 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 rounded-lg text-rose-800 dark:text-rose-300 text-xs text-start"
+          className="p-3.5 bg-[#FF3B30]/10 border border-[#FF3B30]/25 rounded-[16px] text-[#FF3B30] dark:text-[#FF453A] text-[12px] font-medium text-start animate-in fade-in"
         >
           {error}
         </div>
@@ -250,21 +251,21 @@ export function ConnectionPanel() {
         <div
           role="alert"
           data-testid="connection-failed-explanation"
-          className="p-3.5 bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-800 rounded-xl text-amber-900 dark:text-amber-200 text-xs space-y-1 text-start shadow-xs"
+          className="p-4 bg-[#FF9500]/10 border border-[#FF9500]/25 rounded-[18px] text-[12px] space-y-1.5 text-start animate-in fade-in"
         >
-          <div className="font-semibold flex items-center gap-1.5 text-amber-900 dark:text-amber-100">
+          <div className="font-semibold flex items-center gap-1.5 text-[#B26A00] dark:text-[#FF9F0A]">
             <span>⚠️</span>
             <span>{t('statusFailed')}</span>
           </div>
-          <p className="text-[11px] leading-relaxed text-amber-800 dark:text-amber-300">
+          <p className="text-[12px] leading-relaxed text-[#1D1D1F]/80 dark:text-[#F5F5F7]/80">
             {t('connectionFailedExplanation')}
           </p>
         </div>
       )}
 
-      {/* Tabs: Quick Code vs Manual & QR (Only shown when not yet connected) */}
+      {/* Apple HIG Segmented Control: Quick Code vs Manual & QR */}
       {state !== 'connected' && (
-        <div className="flex items-center justify-center p-1 bg-slate-100 dark:bg-slate-800/80 rounded-xl max-w-xs mx-auto mb-2 border border-slate-200 dark:border-slate-700">
+        <div className="flex items-center justify-center p-[3px] bg-[#767680]/12 dark:bg-[#767680]/24 rounded-[11px] max-w-[270px] mx-auto select-none">
           <button
             type="button"
             data-testid="tab-quick-code"
@@ -272,10 +273,10 @@ export function ConnectionPanel() {
               handleReset()
               setConnectionTab('quick')
             }}
-            className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-semibold transition cursor-pointer ${
+            className={`flex-1 py-1 px-3 rounded-[8px] text-[12px] font-medium tracking-tight transition-all duration-150 cursor-pointer ${
               connectionTab === 'quick'
-                ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-xs'
-                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+                ? 'bg-white dark:bg-[#636366] text-[#1D1D1F] dark:text-white shadow-[0_1px_3px_rgba(0,0,0,0.1),0_1px_2px_rgba(0,0,0,0.06)]'
+                : 'text-[#86868B] dark:text-[#98989D] hover:text-[#1D1D1F] dark:hover:text-white'
             }`}
           >
             ⚡️ {t('tabQuickCode')}
@@ -287,10 +288,10 @@ export function ConnectionPanel() {
               handleReset()
               setConnectionTab('manual')
             }}
-            className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-semibold transition cursor-pointer ${
+            className={`flex-1 py-1 px-3 rounded-[8px] text-[12px] font-medium tracking-tight transition-all duration-150 cursor-pointer ${
               connectionTab === 'manual'
-                ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-xs'
-                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+                ? 'bg-white dark:bg-[#636366] text-[#1D1D1F] dark:text-white shadow-[0_1px_3px_rgba(0,0,0,0.1),0_1px_2px_rgba(0,0,0,0.06)]'
+                : 'text-[#86868B] dark:text-[#98989D] hover:text-[#1D1D1F] dark:hover:text-white'
             }`}
           >
             📋 {t('tabManualQr')}
@@ -307,24 +308,47 @@ export function ConnectionPanel() {
       {state !== 'connected' && connectionTab === 'manual' && (
         <>
           {mode === 'none' && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
               <button
+                type="button"
                 onClick={handleCreate}
                 data-testid="create-connection-btn"
-                className="p-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-medium shadow-sm transition text-center focus:outline-hidden focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-slate-900 cursor-pointer"
+                className="group p-5 bg-[#F8F8FA] dark:bg-[#2C2C2E] hover:bg-[#007AFF]/10 dark:hover:bg-[#0A84FF]/15 border border-black/[0.05] dark:border-white/[0.08] hover:border-[#007AFF]/40 rounded-[20px] shadow-[0_1px_3px_rgba(0,0,0,0.03)] transition-all duration-150 text-start active:scale-[0.98] cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#007AFF]"
               >
-                {t('createConnection')}
-                <span className="block text-xs text-indigo-100 mt-1">{t('createConnectionDesc')}</span>
+                <div className="w-10 h-10 rounded-xl bg-[#007AFF]/12 dark:bg-[#0A84FF]/20 text-[#007AFF] dark:text-[#0A84FF] flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
+                  <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="12" cy="12" r="10" />
+                    <line x1="12" y1="8" x2="12" y2="16" />
+                    <line x1="8" y1="12" x2="16" y2="12" />
+                  </svg>
+                </div>
+                <div className="text-[15px] font-semibold text-[#1D1D1F] dark:text-[#F5F5F7] tracking-tight">
+                  {t('createConnection')}
+                </div>
+                <p className="text-[12px] text-[#86868B] dark:text-[#98989D] mt-1 font-normal leading-relaxed">
+                  {t('createConnectionDesc')}
+                </p>
               </button>
+
               <button
+                type="button"
                 onClick={handleJoin}
                 data-testid="join-connection-btn"
-                className="p-4 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-750 text-slate-900 dark:text-slate-100 border border-slate-300 dark:border-slate-700 rounded-xl font-medium shadow-sm transition text-center focus:outline-hidden focus:ring-2 focus:ring-slate-400 cursor-pointer"
+                className="group p-5 bg-[#F8F8FA] dark:bg-[#2C2C2E] hover:bg-[#007AFF]/10 dark:hover:bg-[#0A84FF]/15 border border-black/[0.05] dark:border-white/[0.08] hover:border-[#007AFF]/40 rounded-[20px] shadow-[0_1px_3px_rgba(0,0,0,0.03)] transition-all duration-150 text-start active:scale-[0.98] cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#007AFF]"
               >
-                {t('joinConnection')}
-                <span className="block text-xs text-slate-600 dark:text-slate-400 mt-1">
+                <div className="w-10 h-10 rounded-xl bg-[#34C759]/12 dark:bg-[#30D158]/20 text-[#248A3D] dark:text-[#30D158] flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
+                  <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
+                    <polyline points="10 17 15 12 10 7" />
+                    <line x1="15" y1="12" x2="3" y2="12" />
+                  </svg>
+                </div>
+                <div className="text-[15px] font-semibold text-[#1D1D1F] dark:text-[#F5F5F7] tracking-tight">
+                  {t('joinConnection')}
+                </div>
+                <p className="text-[12px] text-[#86868B] dark:text-[#98989D] mt-1 font-normal leading-relaxed">
                   {t('joinConnectionDesc')}
-                </span>
+                </p>
               </button>
             </div>
           )}
@@ -332,9 +356,9 @@ export function ConnectionPanel() {
           {/* Creator View */}
           {mode === 'create' && (
             <div className="space-y-4">
-              <div>
-                <div className="flex items-center justify-between mb-1">
-                  <label htmlFor="offer-code-output" className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+              <div className="space-y-1.5 text-start">
+                <div className="flex items-center justify-between">
+                  <label htmlFor="offer-code-output" className="text-[12px] font-semibold text-[#1D1D1F] dark:text-[#F5F5F7] tracking-tight">
                     {t('offerCodeLabel')}
                   </label>
                   {offerCode && (
@@ -342,7 +366,7 @@ export function ConnectionPanel() {
                       type="button"
                       data-testid="toggle-offer-qr-btn"
                       onClick={() => setShowOfferQr(!showOfferQr)}
-                      className="text-xs text-indigo-600 dark:text-indigo-400 hover:underline font-medium"
+                      className="text-[12px] text-[#007AFF] dark:text-[#0A84FF] hover:underline font-medium"
                     >
                       {showOfferQr ? t('hideQr') : t('showQr')}
                     </button>
@@ -350,7 +374,7 @@ export function ConnectionPanel() {
                 </div>
 
                 {showOfferQr && offerCode && (
-                  <div className="mb-3">
+                  <div className="py-1">
                     <QrCodeDisplay data={offerCode} />
                   </div>
                 )}
@@ -362,14 +386,14 @@ export function ConnectionPanel() {
                     data-testid="offer-code-output"
                     value={offerCode || (state === 'creating' ? t('generatingOffer') : '')}
                     rows={3}
-                    className="w-full text-xs font-mono p-2.5 pe-20 rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-200 resize-none focus:outline-hidden focus:ring-2 focus:ring-indigo-500"
+                    className="w-full text-[11px] font-mono p-3 pe-20 rounded-[16px] border border-black/[0.08] dark:border-white/[0.12] bg-[#F8F8FA] dark:bg-[#2C2C2E] text-[#1D1D1F] dark:text-[#F5F5F7] resize-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#007AFF]"
                   />
                   {offerCode && (
                     <button
                       type="button"
                       data-testid="copy-offer-btn"
                       onClick={() => copyToClipboard(offerCode, 'offer')}
-                      className="absolute top-2 end-2 px-2.5 py-1 text-xs font-medium rounded-md bg-indigo-600 text-white hover:bg-indigo-700 shadow-xs focus:outline-hidden focus:ring-2 focus:ring-indigo-400"
+                      className="absolute top-2.5 end-2.5 px-3 py-1 text-[11px] font-semibold rounded-full bg-[#007AFF] text-white hover:bg-[#0071E3] active:scale-95 shadow-xs transition"
                     >
                       {copied === 'offer' ? t('copied') : t('copy')}
                     </button>
@@ -377,16 +401,16 @@ export function ConnectionPanel() {
                 </div>
               </div>
 
-              <div>
-                <div className="flex items-center justify-between mb-1">
-                  <label htmlFor="paste-answer-input" className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+              <div className="space-y-1.5 text-start">
+                <div className="flex items-center justify-between">
+                  <label htmlFor="paste-answer-input" className="text-[12px] font-semibold text-[#1D1D1F] dark:text-[#F5F5F7] tracking-tight">
                     {t('pasteAnswerLabel')}
                   </label>
                   <button
                     type="button"
                     data-testid="scan-answer-qr-btn"
                     onClick={() => handleOpenScanner('answer')}
-                    className="text-xs text-indigo-600 dark:text-indigo-400 hover:underline font-medium"
+                    className="text-[12px] text-[#007AFF] dark:text-[#0A84FF] hover:underline font-medium"
                   >
                     📷 {t('scanQr')}
                   </button>
@@ -398,13 +422,14 @@ export function ConnectionPanel() {
                   onChange={(e) => setInputCode(e.target.value)}
                   placeholder={t('pasteAnswerPlaceholder')}
                   rows={3}
-                  className="w-full text-xs font-mono p-2.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 resize-none focus:outline-hidden focus:ring-2 focus:ring-indigo-500"
+                  className="w-full text-[11px] font-mono p-3 rounded-[16px] border border-black/[0.08] dark:border-white/[0.12] bg-[#F8F8FA] dark:bg-[#2C2C2E] text-[#1D1D1F] dark:text-[#F5F5F7] resize-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#007AFF]"
                 />
                 <button
+                  type="button"
                   onClick={() => handleAcceptAnswer()}
                   disabled={!inputCode.trim() || state === 'connecting'}
                   data-testid="connect-answer-btn"
-                  className="mt-2 w-full py-2 px-4 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white rounded-lg text-xs font-semibold transition focus:outline-hidden focus:ring-2 focus:ring-emerald-500"
+                  className="w-full h-10 bg-[#34C759] hover:bg-[#30D158] disabled:opacity-40 text-white rounded-[14px] text-[13px] font-semibold tracking-tight transition-all shadow-sm active:scale-[0.98] cursor-pointer disabled:cursor-not-allowed focus-visible:outline-none"
                 >
                   {state === 'connecting' ? t('connecting') : t('connect')}
                 </button>
@@ -414,17 +439,17 @@ export function ConnectionPanel() {
 
           {/* Joiner View */}
           {mode === 'join' && (
-            <div className="space-y-4">
-              <div>
-                <div className="flex items-center justify-between mb-1">
-                  <label htmlFor="paste-offer-input" className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+            <div className="space-y-4 text-start">
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <label htmlFor="paste-offer-input" className="text-[12px] font-semibold text-[#1D1D1F] dark:text-[#F5F5F7] tracking-tight">
                     {t('pasteOfferLabel')}
                   </label>
                   <button
                     type="button"
                     data-testid="scan-offer-qr-btn"
                     onClick={() => handleOpenScanner('offer')}
-                    className="text-xs text-indigo-600 dark:text-indigo-400 hover:underline font-medium"
+                    className="text-[12px] text-[#007AFF] dark:text-[#0A84FF] hover:underline font-medium"
                   >
                     📷 {t('scanQr')}
                   </button>
@@ -436,14 +461,15 @@ export function ConnectionPanel() {
                   onChange={(e) => setInputCode(e.target.value)}
                   placeholder={t('pasteOfferPlaceholder')}
                   rows={3}
-                  className="w-full text-xs font-mono p-2.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 resize-none focus:outline-hidden focus:ring-2 focus:ring-indigo-500"
+                  className="w-full text-[11px] font-mono p-3 rounded-[16px] border border-black/[0.08] dark:border-white/[0.12] bg-[#F8F8FA] dark:bg-[#2C2C2E] text-[#1D1D1F] dark:text-[#F5F5F7] resize-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#007AFF]"
                 />
                 {!answerCode && (
                   <button
+                    type="button"
                     onClick={() => handleAcceptOffer()}
                     disabled={!inputCode.trim() || state === 'creating'}
                     data-testid="generate-answer-btn"
-                    className="mt-2 w-full py-2 px-4 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white rounded-lg text-xs font-semibold transition focus:outline-hidden focus:ring-2 focus:ring-indigo-500"
+                    className="w-full h-10 bg-[#007AFF] hover:bg-[#0071E3] disabled:opacity-40 text-white rounded-[14px] text-[13px] font-semibold tracking-tight transition-all shadow-sm active:scale-[0.98] cursor-pointer disabled:cursor-not-allowed focus-visible:outline-none"
                   >
                     {state === 'creating' ? t('generatingAnswer') : t('generateAnswer')}
                   </button>
@@ -451,23 +477,23 @@ export function ConnectionPanel() {
               </div>
 
               {answerCode && (
-                <div>
-                  <div className="flex items-center justify-between mb-1">
-                    <label htmlFor="answer-code-output" className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <label htmlFor="answer-code-output" className="text-[12px] font-semibold text-[#1D1D1F] dark:text-[#F5F5F7] tracking-tight">
                       {t('answerCodeLabel')}
                     </label>
                     <button
                       type="button"
                       data-testid="toggle-answer-qr-btn"
                       onClick={() => setShowAnswerQr(!showAnswerQr)}
-                      className="text-xs text-indigo-600 dark:text-indigo-400 hover:underline font-medium"
+                      className="text-[12px] text-[#007AFF] dark:text-[#0A84FF] hover:underline font-medium"
                     >
                       {showAnswerQr ? t('hideQr') : t('showQr')}
                     </button>
                   </div>
 
                   {showAnswerQr && (
-                    <div className="mb-3">
+                    <div className="py-1">
                       <QrCodeDisplay data={answerCode} />
                     </div>
                   )}
@@ -479,18 +505,18 @@ export function ConnectionPanel() {
                       data-testid="answer-code-output"
                       value={answerCode}
                       rows={3}
-                      className="w-full text-xs font-mono p-2.5 pe-20 rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-200 resize-none focus:outline-hidden focus:ring-2 focus:ring-indigo-500"
+                      className="w-full text-[11px] font-mono p-3 pe-20 rounded-[16px] border border-black/[0.08] dark:border-white/[0.12] bg-[#F8F8FA] dark:bg-[#2C2C2E] text-[#1D1D1F] dark:text-[#F5F5F7] resize-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#007AFF]"
                     />
                     <button
                       type="button"
                       data-testid="copy-answer-btn"
                       onClick={() => copyToClipboard(answerCode, 'answer')}
-                      className="absolute top-2 end-2 px-2.5 py-1 text-xs font-medium rounded-md bg-indigo-600 text-white hover:bg-indigo-700 shadow-xs focus:outline-hidden focus:ring-2 focus:ring-indigo-400"
+                      className="absolute top-2.5 end-2.5 px-3 py-1 text-[11px] font-semibold rounded-full bg-[#007AFF] text-white hover:bg-[#0071E3] active:scale-95 shadow-xs transition"
                     >
                       {copied === 'answer' ? t('copied') : t('copy')}
                     </button>
                   </div>
-                  <p className="mt-1 text-xs text-slate-600 dark:text-slate-400">
+                  <p className="mt-1 text-[12px] text-[#86868B] dark:text-[#98989D]">
                     {t('waitingForCreator')}
                   </p>
                 </div>
@@ -500,14 +526,17 @@ export function ConnectionPanel() {
         </>
       )}
 
-      {/* Connected View: File Transfer Protocol */}
+      {/* Connected View: AirDrop File Transfer */}
       {state === 'connected' && (
-        <div className="space-y-5 pt-2 border-t border-slate-200 dark:border-slate-700">
+        <div className="space-y-5 pt-3 border-t border-black/[0.06] dark:border-white/[0.08] animate-in fade-in">
           <div className="flex items-center justify-between">
-            <h2 className="text-sm font-semibold text-slate-800 dark:text-slate-200">
+            <h2 className="text-[15px] font-semibold text-[#1D1D1F] dark:text-[#F5F5F7] tracking-tight">
               {t('p2pFileTransfer')}
             </h2>
-            <span className="text-xs text-emerald-600 dark:text-emerald-400 font-medium">● {t('statusConnected')}</span>
+            <span className="text-[12px] text-[#34C759] font-medium flex items-center gap-1.5">
+              <span className="h-1.5 w-1.5 rounded-full bg-[#34C759]" />
+              {t('statusConnected')}
+            </span>
           </div>
 
           {/* Drag & Drop Area */}

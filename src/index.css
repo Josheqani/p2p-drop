@@ -1,1 +1,47 @@
 @import "tailwindcss";
+
+@layer base {
+  :root {
+    --apple-system-bg: #F2F2F7;
+    --apple-card-bg: #FFFFFF;
+    --apple-subcard-bg: #F8F8FA;
+    --apple-border: rgba(60, 60, 67, 0.12);
+    --apple-label: #1D1D1F;
+    --apple-secondary-label: #86868B;
+    --apple-blue: #007AFF;
+    --apple-blue-hover: #0071E3;
+    --apple-green: #34C759;
+    --apple-red: #FF3B30;
+    --apple-fill: rgba(118, 118, 128, 0.12);
+    --apple-fill-hover: rgba(118, 118, 128, 0.18);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --apple-system-bg: #000000;
+      --apple-card-bg: #1C1C1E;
+      --apple-subcard-bg: #2C2C2E;
+      --apple-border: rgba(235, 235, 245, 0.14);
+      --apple-label: #F5F5F7;
+      --apple-secondary-label: #98989D;
+      --apple-blue: #0A84FF;
+      --apple-blue-hover: #0071E3;
+      --apple-green: #30D158;
+      --apple-red: #FF453A;
+      --apple-fill: rgba(118, 118, 128, 0.24);
+      --apple-fill-hover: rgba(118, 118, 128, 0.32);
+    }
+  }
+
+  html {
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "SF Pro", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    background-color: var(--apple-system-bg);
+    color: var(--apple-label);
+  }
+}

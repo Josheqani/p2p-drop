@@ -1,6 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react'
-
-export type Language = 'en' | 'fa'
+import React, { createContext, useContext, useMemo } from 'react'
 
 export interface TranslationStrings {
   title: string
@@ -46,7 +44,6 @@ export interface TranslationStrings {
   cancel: string
   download: string
   left: string
-  languageToggle: string
   showQr: string
   hideQr: string
   scanQr: string
@@ -85,216 +82,118 @@ export interface TranslationStrings {
   connectionDeclined: string
 }
 
-
-
-export const translations: Record<Language, TranslationStrings> = {
-  en: {
-    title: 'p2p-drop',
-    tagline: 'Direct, serverless WebRTC file transfer between two browsers.',
-    status: 'Status:',
-    statusIdle: 'idle',
-    statusCreating: 'creating',
-    statusWaiting: 'waiting',
-    statusConnecting: 'connecting',
-    statusConnected: 'connected',
-    statusFailed: 'failed',
-    statusClosed: 'closed',
-    resetOrDisconnect: 'Reset / Disconnect',
-    createConnection: 'Create connection',
-    createConnectionDesc: 'Start a room to send or receive',
-    joinConnection: 'Join connection',
-    joinConnectionDesc: 'Join with an offer code',
-    offerCodeLabel: '1. Your Offer Code (send this to the peer)',
-    generatingOffer: 'Generating offer...',
-    copy: 'Copy',
-    copied: 'Copied!',
-    pasteAnswerLabel: '2. Paste Answer Code from peer',
-    pasteAnswerPlaceholder: 'Paste the answer code here...',
-    connect: 'Connect',
-    connecting: 'Connecting...',
-    pasteOfferLabel: '1. Paste Offer Code from peer',
-    pasteOfferPlaceholder: 'Paste offer code here...',
-    generateAnswer: 'Generate Answer Code',
-    generatingAnswer: 'Generating answer...',
-    answerCodeLabel: '2. Your Answer Code (send this back to creator)',
-    waitingForCreator: 'Waiting for creator to accept answer...',
-    p2pFileTransfer: 'P2P File Transfer',
-    dropFilesPrompt: 'Drag & drop files here, or',
-    browse: 'browse',
-    dropFilesSubtext: 'Any file size • Transferred directly peer-to-peer',
-    transfers: 'Transfers',
-    send: 'SEND',
-    recv: 'RECV',
-    queued: 'Queued...',
-    completed: '✓ Completed',
-    cancelled: 'Cancelled',
-    failed: '✕ Failed',
-    cancel: 'Cancel',
-    download: 'Download',
-    left: 'left',
-    languageToggle: 'فارسی',
-    showQr: 'Show QR',
-    hideQr: 'Hide QR',
-    scanQr: 'Scan QR with Camera',
-    cameraDenied: 'Camera access denied or unavailable. Please paste the code manually.',
-    close: 'Close',
-    connectionFailedExplanation:
-      'Direct WebRTC connection could not be established. This usually happens when one or both devices are on restrictive enterprise/cellular networks or behind symmetric NATs that block direct peer-to-peer UDP connections.',
-    transferInProgressWarning:
-      'A file transfer is currently in progress. Leaving this page will cancel the transfer.',
-    settings: 'Network Settings',
-    iceSettings: 'WebRTC & Relay Settings',
-    iceSettingsDesc:
-      'Configure STUN and TURN servers to help connect through cellular firewalls (MCI/Irancell), symmetric NAT, and VPNs.',
-    turnRelay: 'Enable TURN Relay',
-    turnRelayDesc:
-      'Uses encrypted relay servers (OpenRelay) if direct P2P connection fails due to symmetric NAT or VPN.',
-    activeIceServers: 'Active STUN/TURN Servers',
-    customIceServers: 'Custom ICE Servers (JSON)',
-    customIceServersDesc: 'Supply your own custom RTCIceServer list.',
-    resetDefaults: 'Reset to Defaults',
-    save: 'Save',
-    saved: 'Saved!',
-    tabQuickCode: 'Quick Code',
-    tabManualQr: 'Manual & QR',
-    roomCode: 'Room Code',
-    roomCodeDesc: 'Share this 6-digit code with the other device to connect directly.',
-    waitingForJoiner: 'Waiting for peer to enter room code...',
-    enterRoomCode: 'Enter 6-Digit Room Code',
-    enterRoomCodePlaceholder: 'e.g. 123456',
-    requestToConnect: 'Request Connection',
-    requestSentWaiting: 'Request sent! Waiting for host to approve...',
-    incomingRequestTitle: 'Incoming Connection Request',
-    incomingRequestDesc: 'A device is asking to connect and transfer files with you:',
-    device: 'Device',
-    operatingSystem: 'OS',
-    browser: 'Browser',
-    screen: 'Screen',
-    acceptConnection: '✓ Accept Connection',
-    declineConnection: '✕ Decline',
-    connectionDeclined: 'Connection request was declined by the host.',
-  },
-  fa: {
-    title: 'پی‌توپی دراپ',
-    tagline: 'انتقال مستقیم و بدون سرور فایل بین دو مرورگر با وب‌آرتی‌سی',
-    status: 'وضعیت:',
-    statusIdle: 'آماده',
-    statusCreating: 'در حال ایجاد',
-    statusWaiting: 'در انتظار پاسخ',
-    statusConnecting: 'در حال اتصال',
-    statusConnected: 'متصل شد',
-    statusFailed: 'ناموفق',
-    statusClosed: 'بسته شد',
-    resetOrDisconnect: 'قطع ارتباط / شروع مجدد',
-    createConnection: 'ایجاد اتصال',
-    createConnectionDesc: 'شروع برای ارسال یا دریافت فایل',
-    joinConnection: 'پیوستن به اتصال',
-    joinConnectionDesc: 'اتصال با کد دریافت شده',
-    offerCodeLabel: '۱. کد پیشنهاد شما (این کد را برای دستگاه مقابل بفرستید)',
-    generatingOffer: 'در حال تولید کد پیشنهاد...',
-    copy: 'کپی',
-    copied: 'کپی شد!',
-    pasteAnswerLabel: '۲. کد پاسخ دستگاه مقابل را جای‌گذاری کنید',
-    pasteAnswerPlaceholder: 'کد پاسخ را اینجا قرار دهید...',
-    connect: 'برقراری اتصال',
-    connecting: 'در حال اتصال...',
-    pasteOfferLabel: '۱. کد پیشنهاد دستگاه اول را جای‌گذاری کنید',
-    pasteOfferPlaceholder: 'کد پیشنهاد را اینجا قرار دهید...',
-    generateAnswer: 'تولید کد پاسخ',
-    generatingAnswer: 'در حال تولید کد پاسخ...',
-    answerCodeLabel: '۲. کد پاسخ شما (این را برای دستگاه اول بفرستید)',
-    waitingForCreator: 'در انتظار تأیید توسط دستگاه اول...',
-    p2pFileTransfer: 'انتقال مستقیم فایل',
-    dropFilesPrompt: 'فایل‌ها را اینجا بکشید و رها کنید، یا',
-    browse: 'انتخاب کنید',
-    dropFilesSubtext: 'بدون محدودیت حجم • انتقال مستقیم و امن',
-    transfers: 'انتقال‌ها',
-    send: 'ارسال',
-    recv: 'دریافت',
-    queued: 'در صف...',
-    completed: '✓ تکمیل شد',
-    cancelled: 'لغو شد',
-    failed: '✕ خطا',
-    cancel: 'لغو',
-    download: 'دانلود',
-    left: 'باقی‌مانده',
-    languageToggle: 'English',
-    showQr: 'نمایش بارکد QR',
-    hideQr: 'بستن بارکد QR',
-    scanQr: 'اسکن بارکد با دوربین',
-    cameraDenied: 'دسترسی به دوربین رد شد یا در دسترس نیست. لطفاً کد را دستی وارد کنید.',
-    close: 'بستن',
-    connectionFailedExplanation:
-      'برقراری ارتباط مستقیم نظیربه‌نظیر ناموفق بود. بررسی کنید که گزینه رله TURN در تنظیمات فعال باشد، یا بدون فیلترشکن روی یک وای‌فای مشترک تست کنید.',
-    transferInProgressWarning:
-      'انتقال فایل در حال انجام است. خروج از این صفحه موجب لغو انتقال خواهد شد.',
-    settings: 'تنظیمات شبکه',
-    iceSettings: 'تنظیمات وب‌آرتی‌سی و رله',
-    iceSettingsDesc:
-      'پیکربندی سرورهای STUN و TURN برای اتصال پایدار از طریق فایروال، اینترنت همراه (همراه اول/ایرانسل) و وی‌پی‌ان.',
-    turnRelay: 'فعال‌سازی رله TURN',
-    turnRelayDesc:
-      'در صورت مسدود بودن اتصال مستقیم به دلیل NAT متقارن یا وی‌پی‌ان، از سرورهای واسط امن (OpenRelay) استفاده می‌شود.',
-    activeIceServers: 'سرورهای فعال STUN و TURN',
-    customIceServers: 'سرورهای سفارشی (JSON)',
-    customIceServersDesc: 'امکان تعریف سرورهای اختصاصی RTCIceServer.',
-    resetDefaults: 'بازنشانی به پیش‌فرض',
-    save: 'ذخیره',
-    saved: 'ذخیره شد!',
-    tabQuickCode: 'کد عددی',
-    tabManualQr: 'دستی و بارکد',
-    roomCode: 'کد اتاق',
-    roomCodeDesc: 'این کد ۶ رقمی را با دستگاه مقابل به اشتراک بگذارید تا مستقیماً وصل شود.',
-    waitingForJoiner: 'در انتظار ورود کد توسط دستگاه مقابل...',
-    enterRoomCode: 'کد ۶ رقمی اتاق را وارد کنید',
-    enterRoomCodePlaceholder: 'مثال: ۱۲۳۴۵۶',
-    requestToConnect: 'درخواست اتصال',
-    requestSentWaiting: 'درخواست ارسال شد! در انتظار تأیید میزبان...',
-    incomingRequestTitle: 'درخواست اتصال جدید',
-    incomingRequestDesc: 'دستگاه زیر مایل است برای انتقال فایل به شما متصل شود:',
-    device: 'دستگاه',
-    operatingSystem: 'سیستم‌عامل',
-    browser: 'مرورگر',
-    screen: 'صفحه‌نمایش',
-    acceptConnection: '✓ تأیید و برقراری ارتباط',
-    declineConnection: '✕ رد درخواست',
-    connectionDeclined: 'درخواست اتصال توسط میزبان رد شد.',
-  },
+export const translations: TranslationStrings = {
+  title: 'p2p-drop',
+  tagline: 'Direct, serverless WebRTC file transfer between two browsers.',
+  status: 'Status:',
+  statusIdle: 'Idle',
+  statusCreating: 'Creating…',
+  statusWaiting: 'Waiting…',
+  statusConnecting: 'Connecting…',
+  statusConnected: 'Connected',
+  statusFailed: 'Failed',
+  statusClosed: 'Closed',
+  resetOrDisconnect: 'Disconnect',
+  createConnection: 'Create Room',
+  createConnectionDesc: 'Generate a code to send or receive files',
+  joinConnection: 'Join Room',
+  joinConnectionDesc: 'Connect with an existing code',
+  offerCodeLabel: '1. Your Offer Code (send to peer)',
+  generatingOffer: 'Generating offer…',
+  copy: 'Copy',
+  copied: 'Copied',
+  pasteAnswerLabel: '2. Paste Answer Code from peer',
+  pasteAnswerPlaceholder: 'Paste the answer code here…',
+  connect: 'Connect',
+  connecting: 'Connecting…',
+  pasteOfferLabel: '1. Paste Offer Code from peer',
+  pasteOfferPlaceholder: 'Paste offer code here…',
+  generateAnswer: 'Generate Answer Code',
+  generatingAnswer: 'Generating answer…',
+  answerCodeLabel: '2. Your Answer Code (send to creator)',
+  waitingForCreator: 'Waiting for creator to accept answer…',
+  p2pFileTransfer: 'AirDrop P2P Transfer',
+  dropFilesPrompt: 'Drop files to send, or',
+  browse: 'choose files',
+  dropFilesSubtext: 'Unlimited file size • End-to-end encrypted peer-to-peer',
+  transfers: 'Transfers',
+  send: 'SEND',
+  recv: 'RECV',
+  queued: 'Queued…',
+  completed: 'Completed',
+  cancelled: 'Cancelled',
+  failed: 'Failed',
+  cancel: 'Cancel',
+  download: 'Download',
+  left: 'left',
+  showQr: 'Show QR',
+  hideQr: 'Hide QR',
+  scanQr: 'Scan QR with Camera',
+  cameraDenied: 'Camera access denied or unavailable. Please paste the code manually.',
+  close: 'Close',
+  connectionFailedExplanation:
+    'Direct WebRTC connection could not be established. This usually happens when one or both devices are on restrictive enterprise/cellular networks or behind symmetric NATs that block direct peer-to-peer UDP connections.',
+  transferInProgressWarning:
+    'A file transfer is currently in progress. Leaving this page will cancel the transfer.',
+  settings: 'Network Settings',
+  iceSettings: 'WebRTC & Relay Settings',
+  iceSettingsDesc:
+    'Configure STUN and TURN servers to help connect through cellular firewalls, symmetric NAT, and VPNs.',
+  turnRelay: 'TURN Relay',
+  turnRelayDesc:
+    'Uses encrypted relay servers if direct P2P connection fails due to symmetric NAT or VPN.',
+  activeIceServers: 'Active STUN/TURN Servers',
+  customIceServers: 'Custom ICE Servers (JSON)',
+  customIceServersDesc: 'Supply your own custom RTCIceServer list.',
+  resetDefaults: 'Reset to Defaults',
+  save: 'Save',
+  saved: 'Saved',
+  tabQuickCode: 'Quick Code',
+  tabManualQr: 'Manual & QR',
+  roomCode: 'Room Code',
+  roomCodeDesc: 'Share this 6-digit code with the other device to connect directly.',
+  waitingForJoiner: 'Waiting for peer to enter room code…',
+  enterRoomCode: 'Enter 6-Digit Room Code',
+  enterRoomCodePlaceholder: '123 456',
+  requestToConnect: 'Request Connection',
+  requestSentWaiting: 'Request sent! Waiting for approval…',
+  incomingRequestTitle: 'Connection Request',
+  incomingRequestDesc: 'A nearby device is requesting to connect and transfer files:',
+  device: 'Device',
+  operatingSystem: 'OS',
+  browser: 'Browser',
+  screen: 'Display',
+  acceptConnection: 'Accept',
+  declineConnection: 'Decline',
+  connectionDeclined: 'Connection request was declined by the host.',
 }
 
 export interface I18nContextType {
-  lang: Language
-  setLang: (lang: Language) => void
   t: (key: keyof TranslationStrings) => string
-  dir: 'ltr' | 'rtl'
+  strings: TranslationStrings
 }
 
-export const I18nContext = createContext<I18nContextType | null>(null)
+export const I18nContext = createContext<I18nContextType>({
+  t: (key: keyof TranslationStrings) => translations[key] ?? key,
+  strings: translations,
+})
 
 export function I18nProvider({ children }: { children: React.ReactNode }) {
-  const [lang, setLang] = useState<Language>('en')
-  const dir = lang === 'fa' ? 'rtl' : 'ltr'
-
-  useEffect(() => {
-    document.documentElement.dir = dir
-    document.documentElement.lang = lang
-  }, [dir, lang])
-
-  const t = (key: keyof TranslationStrings): string => {
-    return translations[lang][key] || translations.en[key] || key
-  }
-
-  return React.createElement(
-    I18nContext.Provider,
-    { value: { lang, setLang, t, dir } },
-    children,
+  const value = useMemo(
+    () => ({
+      t: (key: keyof TranslationStrings): string => translations[key] ?? key,
+      strings: translations,
+    }),
+    [],
   )
+
+  return React.createElement(I18nContext.Provider, { value }, children)
 }
 
 export function useI18n() {
   const context = useContext(I18nContext)
-  if (!context) {
-    throw new Error('useI18n must be used within an I18nProvider')
+  return context ?? {
+    t: (key: keyof TranslationStrings): string => translations[key] ?? key,
+    strings: translations,
   }
-  return context
 }

@@ -32,36 +32,41 @@ export function StatusBadge({ state }: StatusBadgeProps) {
   const getBadgeClasses = () => {
     switch (state) {
       case 'connected':
-        return 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border-emerald-300 dark:border-emerald-800'
+        return 'bg-[#34C759]/12 text-[#248A3D] dark:bg-[#30D158]/18 dark:text-[#30D158] border-[#34C759]/25'
       case 'failed':
-        return 'bg-rose-100 text-rose-800 dark:bg-rose-950/60 dark:text-rose-300 border-rose-300 dark:border-rose-800'
+        return 'bg-[#FF3B30]/12 text-[#D70015] dark:bg-[#FF453A]/18 dark:text-[#FF453A] border-[#FF3B30]/25'
       case 'connecting':
       case 'creating':
       case 'waiting':
-        return 'bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 border-amber-300 dark:border-amber-800'
+        return 'bg-[#FF9500]/12 text-[#B26A00] dark:bg-[#FF9F0A]/18 dark:text-[#FF9F0A] border-[#FF9500]/25'
       default:
-        return 'bg-slate-200 text-slate-800 dark:bg-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-600'
+        return 'bg-[#767680]/12 text-[#636366] dark:text-[#8E8E93] border-transparent'
+    }
+  }
+
+  const getDotClasses = () => {
+    switch (state) {
+      case 'connected':
+        return 'bg-[#34C759] dark:bg-[#30D158]'
+      case 'failed':
+        return 'bg-[#FF3B30] dark:bg-[#FF453A]'
+      case 'idle':
+        return 'bg-[#8E8E93]'
+      default:
+        return 'bg-[#FF9500] dark:bg-[#FF9F0A] animate-pulse'
     }
   }
 
   return (
-    <div className="flex items-center space-x-2 rtl:space-x-reverse" aria-live="polite">
-      <span className="text-xs font-medium text-slate-600 dark:text-slate-400">{t('status')}</span>
+    <div className="flex items-center space-x-2" aria-live="polite">
+      <span className="text-[12px] font-medium text-[#86868B] dark:text-[#98989D]">
+        {t('status')}
+      </span>
       <span
         data-testid="connection-status"
-        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border ${getBadgeClasses()}`}
+        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-medium border transition-colors ${getBadgeClasses()}`}
       >
-        <span
-          className={`h-1.5 w-1.5 rounded-full me-1.5 ${
-            state === 'connected'
-              ? 'bg-emerald-500'
-              : state === 'failed'
-              ? 'bg-rose-500'
-              : state === 'idle'
-              ? 'bg-slate-400'
-              : 'bg-amber-500 animate-pulse'
-          }`}
-        />
+        <span className={`h-1.5 w-1.5 rounded-full me-1.5 ${getDotClasses()}`} />
         {getStatusText()}
       </span>
     </div>
