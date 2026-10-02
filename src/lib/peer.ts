@@ -180,9 +180,9 @@ export class PeerConnection {
 
   /**
    * Initiates connection as offerer. Creates data channel, gathers ICE candidates,
-   * and returns the compressed signaling code.
+   * and returns the raw session description.
    */
-  async createOffer(): Promise<string> {
+  async createRawOffer(): Promise<RTCSessionDescriptionInit> {
     this.setState('creating')
     const pc = this.setupPeerConnection()
 
@@ -200,13 +200,25 @@ export class PeerConnection {
     }
 
     this.setState('waiting')
-    return encodeDescription(pc.localDescription)
+    return {
+      type: pc.localDescription.type,
+      sdp: pc.localDescription.sdp,
+    }
   }
 
   /**
-   * Accepts an answer from the joiner.
+   * Initiates connection as offerer. Creates data channel, gathers ICE candidates,
+   * and returns the compressed signaling code.
    */
-  async acceptAnswer(answerCode: string): Promise<void> {
+  async createOffer(): Promise<string> {
+    const rawOffer = await this.createRawOffer()
+    return encodeDescription(rawOffer)
+  }
+
+  /**
+   * Accepts a raw answer object from the joiner.
+   */
+  async acceptRawAnswer(desc: RTCSessionDescriptionInit): Promise<void> {
     if (!this.pc) {
       throw new Error('Cannot accept answer without an active peer connection')
     }
@@ -227,7 +239,6 @@ export class PeerConnection {
     }
 
     this.setState('connecting')
-    const desc = await decodeDescription(answerCode)
     if (desc.type !== 'answer') {
       this.setState('failed')
       throw new Error(`Expected answer description, received "${desc.type}"`)
@@ -236,10 +247,21 @@ export class PeerConnection {
   }
 
   /**
-   * Accepts an offer from the creator, creates an answer, gathers ICE candidates,
-   * and returns the answer signaling code.
+   * Accepts an answer string from the joiner.
    */
-  async acceptOffer(offerCode: string): Promise<string> {
+  async acceptAnswer(answerCode: string): Promise<void> {
+    if (!this.pc) {
+      throw new Error('Cannot accept answer without an active peer connection')
+    }
+    const desc = await decodeDescription(answerCode)
+    await this.acceptRawAnswer(desc)
+  }
+
+  /**
+   * Accepts a raw offer, creates an answer, gathers ICE candidates,
+   * and returns the raw answer session description.
+   */
+  async acceptRawOffer(desc: RTCSessionDescriptionInit): Promise<RTCSessionDescriptionInit> {
     this.setState('creating')
     const pc = this.setupPeerConnection()
 
@@ -249,7 +271,6 @@ export class PeerConnection {
       }
     }
 
-    const desc = await decodeDescription(offerCode)
     if (desc.type !== 'offer') {
       this.setState('failed')
       throw new Error(`Expected offer description, received "${desc.type}"`)
@@ -268,7 +289,20 @@ export class PeerConnection {
     }
 
     this.setState('connecting')
-    return encodeDescription(pc.localDescription)
+    return {
+      type: pc.localDescription.type,
+      sdp: pc.localDescription.sdp,
+    }
+  }
+
+  /**
+   * Accepts an offer from the creator, creates an answer, gathers ICE candidates,
+   * and returns the answer signaling code.
+   */
+  async acceptOffer(offerCode: string): Promise<string> {
+    const desc = await decodeDescription(offerCode)
+    const rawAnswer = await this.acceptRawOffer(desc)
+    return encodeDescription(rawAnswer)
   }
 
   /**

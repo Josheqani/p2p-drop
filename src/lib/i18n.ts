@@ -65,6 +65,24 @@ export interface TranslationStrings {
   resetDefaults: string
   save: string
   saved: string
+  tabQuickCode: string
+  tabManualQr: string
+  roomCode: string
+  roomCodeDesc: string
+  waitingForJoiner: string
+  enterRoomCode: string
+  enterRoomCodePlaceholder: string
+  requestToConnect: string
+  requestSentWaiting: string
+  incomingRequestTitle: string
+  incomingRequestDesc: string
+  device: string
+  operatingSystem: string
+  browser: string
+  screen: string
+  acceptConnection: string
+  declineConnection: string
+  connectionDeclined: string
 }
 
 
@@ -137,6 +155,24 @@ export const translations: Record<Language, TranslationStrings> = {
     resetDefaults: 'Reset to Defaults',
     save: 'Save',
     saved: 'Saved!',
+    tabQuickCode: 'Quick Code',
+    tabManualQr: 'Manual & QR',
+    roomCode: 'Room Code',
+    roomCodeDesc: 'Share this 6-digit code with the other device to connect directly.',
+    waitingForJoiner: 'Waiting for peer to enter room code...',
+    enterRoomCode: 'Enter 6-Digit Room Code',
+    enterRoomCodePlaceholder: 'e.g. 123456',
+    requestToConnect: 'Request Connection',
+    requestSentWaiting: 'Request sent! Waiting for host to approve...',
+    incomingRequestTitle: 'Incoming Connection Request',
+    incomingRequestDesc: 'A device is asking to connect and transfer files with you:',
+    device: 'Device',
+    operatingSystem: 'OS',
+    browser: 'Browser',
+    screen: 'Screen',
+    acceptConnection: '✓ Accept Connection',
+    declineConnection: '✕ Decline',
+    connectionDeclined: 'Connection request was declined by the host.',
   },
   fa: {
     title: 'پی‌توپی دراپ',
@@ -205,6 +241,24 @@ export const translations: Record<Language, TranslationStrings> = {
     resetDefaults: 'بازنشانی به پیش‌فرض',
     save: 'ذخیره',
     saved: 'ذخیره شد!',
+    tabQuickCode: 'کد عددی',
+    tabManualQr: 'دستی و بارکد',
+    roomCode: 'کد اتاق',
+    roomCodeDesc: 'این کد ۶ رقمی را با دستگاه مقابل به اشتراک بگذارید تا مستقیماً وصل شود.',
+    waitingForJoiner: 'در انتظار ورود کد توسط دستگاه مقابل...',
+    enterRoomCode: 'کد ۶ رقمی اتاق را وارد کنید',
+    enterRoomCodePlaceholder: 'مثال: ۱۲۳۴۵۶',
+    requestToConnect: 'درخواست اتصال',
+    requestSentWaiting: 'درخواست ارسال شد! در انتظار تأیید میزبان...',
+    incomingRequestTitle: 'درخواست اتصال جدید',
+    incomingRequestDesc: 'دستگاه زیر مایل است برای انتقال فایل به شما متصل شود:',
+    device: 'دستگاه',
+    operatingSystem: 'سیستم‌عامل',
+    browser: 'مرورگر',
+    screen: 'صفحه‌نمایش',
+    acceptConnection: '✓ تأیید و برقراری ارتباط',
+    declineConnection: '✕ رد درخواست',
+    connectionDeclined: 'درخواست اتصال توسط میزبان رد شد.',
   },
 }
 

@@ -7,9 +7,11 @@ import { DropZone } from './DropZone'
 import { TransferList } from './TransferList'
 import { QrCodeDisplay } from './QrCodeDisplay'
 import { QrScannerModal } from './QrScannerModal'
+import { RoomCodePanel } from './RoomCodePanel'
 
 export function ConnectionPanel() {
   const { t } = useI18n()
+  const [connectionTab, setConnectionTab] = useState<'quick' | 'manual'>('quick')
   const [peer, setPeer] = useState<PeerConnection | null>(null)
   const [mode, setMode] = useState<'none' | 'create' | 'join'>('none')
   const [state, setState] = useState<PeerState>('idle')
@@ -99,6 +101,22 @@ export function ConnectionPanel() {
         }
       }
     })
+  }
+
+  const handlePeerConnected = (p: PeerConnection) => {
+    peerRef.current = p
+    setPeer(p)
+    setState('connected')
+    setupPeerListeners(p)
+    if (p.dataChannel) {
+      const tm = new TransferManager(p.dataChannel)
+      transferManagerRef.current = tm
+      tm.onTransfersChange((list) => {
+        startTransition(() => {
+          setTransfers(list)
+        })
+      })
+    }
   }
 
   const handleCreate = async () => {
@@ -193,6 +211,7 @@ export function ConnectionPanel() {
 
   const handleScannedCode = (scanned: string) => {
     setInputCode(scanned)
+    setIsScannerOpen(false)
     if (scannerTarget === 'offer') {
       handleAcceptOffer(scanned)
     } else if (scannerTarget === 'answer') {
@@ -201,25 +220,27 @@ export function ConnectionPanel() {
   }
 
   return (
-    <div className="space-y-6 text-start">
-      {/* State badge and actions */}
+    <div className="space-y-6">
+      {/* Top Header Controls: Status & Disconnect Button */}
       <div className="flex items-center justify-between">
         <StatusBadge state={state} />
 
-        {mode !== 'none' && (
+        {state !== 'idle' && (
           <button
             onClick={handleReset}
-            className="text-xs text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 underline focus:outline-hidden focus:ring-1 focus:ring-slate-400 rounded"
+            data-testid="reset-connection-btn"
+            className="text-xs text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 transition focus:outline-hidden"
           >
             {t('resetOrDisconnect')}
           </button>
         )}
       </div>
 
+      {/* Error Callout */}
       {error && (
         <div
           role="alert"
-          className="p-3 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 rounded-lg text-rose-800 dark:text-rose-300 text-xs"
+          className="p-3 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 rounded-lg text-rose-800 dark:text-rose-300 text-xs text-start"
         >
           {error}
         </div>
@@ -241,197 +262,242 @@ export function ConnectionPanel() {
         </div>
       )}
 
-      {/* Mode selection */}
-      {mode === 'none' && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      {/* Tabs: Quick Code vs Manual & QR (Only shown when not yet connected) */}
+      {state !== 'connected' && (
+        <div className="flex items-center justify-center p-1 bg-slate-100 dark:bg-slate-800/80 rounded-xl max-w-xs mx-auto mb-2 border border-slate-200 dark:border-slate-700">
           <button
-            onClick={handleCreate}
-            data-testid="create-connection-btn"
-            className="p-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-medium shadow-sm transition text-center focus:outline-hidden focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-slate-900"
+            type="button"
+            data-testid="tab-quick-code"
+            onClick={() => {
+              handleReset()
+              setConnectionTab('quick')
+            }}
+            className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-semibold transition cursor-pointer ${
+              connectionTab === 'quick'
+                ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-xs'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+            }`}
           >
-            {t('createConnection')}
-            <span className="block text-xs text-indigo-100 mt-1">{t('createConnectionDesc')}</span>
+            ⚡️ {t('tabQuickCode')}
           </button>
           <button
-            onClick={handleJoin}
-            data-testid="join-connection-btn"
-            className="p-4 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-750 text-slate-900 dark:text-slate-100 border border-slate-300 dark:border-slate-700 rounded-xl font-medium shadow-sm transition text-center focus:outline-hidden focus:ring-2 focus:ring-slate-400"
+            type="button"
+            data-testid="tab-manual-qr"
+            onClick={() => {
+              handleReset()
+              setConnectionTab('manual')
+            }}
+            className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-semibold transition cursor-pointer ${
+              connectionTab === 'manual'
+                ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-xs'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+            }`}
           >
-            {t('joinConnection')}
-            <span className="block text-xs text-slate-600 dark:text-slate-400 mt-1">
-              {t('joinConnectionDesc')}
-            </span>
+            📋 {t('tabManualQr')}
           </button>
         </div>
       )}
 
-      {/* Creator View */}
-      {mode === 'create' && state !== 'connected' && (
-        <div className="space-y-4">
-          <div>
-            <div className="flex items-center justify-between mb-1">
-              <label htmlFor="offer-code-output" className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                {t('offerCodeLabel')}
-              </label>
-              {offerCode && (
-                <button
-                  type="button"
-                  data-testid="toggle-offer-qr-btn"
-                  onClick={() => setShowOfferQr(!showOfferQr)}
-                  className="text-xs text-indigo-600 dark:text-indigo-400 hover:underline font-medium"
-                >
-                  {showOfferQr ? t('hideQr') : t('showQr')}
-                </button>
-              )}
-            </div>
-
-            {showOfferQr && offerCode && (
-              <div className="mb-3">
-                <QrCodeDisplay data={offerCode} />
-              </div>
-            )}
-
-            <div className="relative">
-              <textarea
-                id="offer-code-output"
-                readOnly
-                data-testid="offer-code-output"
-                value={offerCode || (state === 'creating' ? t('generatingOffer') : '')}
-                rows={3}
-                className="w-full text-xs font-mono p-2.5 pe-20 rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-200 resize-none focus:outline-hidden focus:ring-2 focus:ring-indigo-500"
-              />
-              {offerCode && (
-                <button
-                  type="button"
-                  data-testid="copy-offer-btn"
-                  onClick={() => copyToClipboard(offerCode, 'offer')}
-                  className="absolute top-2 end-2 px-2.5 py-1 text-xs font-medium rounded-md bg-indigo-600 text-white hover:bg-indigo-700 shadow-xs focus:outline-hidden focus:ring-2 focus:ring-indigo-400"
-                >
-                  {copied === 'offer' ? t('copied') : t('copy')}
-                </button>
-              )}
-            </div>
-          </div>
-
-          <div>
-            <div className="flex items-center justify-between mb-1">
-              <label htmlFor="paste-answer-input" className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                {t('pasteAnswerLabel')}
-              </label>
-              <button
-                type="button"
-                data-testid="scan-answer-qr-btn"
-                onClick={() => handleOpenScanner('answer')}
-                className="text-xs text-indigo-600 dark:text-indigo-400 hover:underline font-medium"
-              >
-                📷 {t('scanQr')}
-              </button>
-            </div>
-            <textarea
-              id="paste-answer-input"
-              data-testid="paste-answer-input"
-              value={inputCode}
-              onChange={(e) => setInputCode(e.target.value)}
-              placeholder={t('pasteAnswerPlaceholder')}
-              rows={3}
-              className="w-full text-xs font-mono p-2.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 resize-none focus:outline-hidden focus:ring-2 focus:ring-indigo-500"
-            />
-            <button
-              onClick={() => handleAcceptAnswer()}
-              disabled={!inputCode.trim() || state === 'connecting'}
-              data-testid="connect-answer-btn"
-              className="mt-2 w-full py-2 px-4 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white rounded-lg text-xs font-semibold transition focus:outline-hidden focus:ring-2 focus:ring-emerald-500"
-            >
-              {state === 'connecting' ? t('connecting') : t('connect')}
-            </button>
-          </div>
-        </div>
+      {/* Tab 1: Quick Room Code with Host Approval */}
+      {state !== 'connected' && connectionTab === 'quick' && (
+        <RoomCodePanel onConnected={handlePeerConnected} onError={setError} />
       )}
 
-      {/* Joiner View */}
-      {mode === 'join' && state !== 'connected' && (
-        <div className="space-y-4">
-          <div>
-            <div className="flex items-center justify-between mb-1">
-              <label htmlFor="paste-offer-input" className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                {t('pasteOfferLabel')}
-              </label>
+      {/* Tab 2: Manual Copy/Paste & QR Code Flow (Offline Fallback) */}
+      {state !== 'connected' && connectionTab === 'manual' && (
+        <>
+          {mode === 'none' && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <button
-                type="button"
-                data-testid="scan-offer-qr-btn"
-                onClick={() => handleOpenScanner('offer')}
-                className="text-xs text-indigo-600 dark:text-indigo-400 hover:underline font-medium"
+                onClick={handleCreate}
+                data-testid="create-connection-btn"
+                className="p-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-medium shadow-sm transition text-center focus:outline-hidden focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-slate-900 cursor-pointer"
               >
-                📷 {t('scanQr')}
+                {t('createConnection')}
+                <span className="block text-xs text-indigo-100 mt-1">{t('createConnectionDesc')}</span>
               </button>
-            </div>
-            <textarea
-              id="paste-offer-input"
-              data-testid="paste-offer-input"
-              value={inputCode}
-              onChange={(e) => setInputCode(e.target.value)}
-              placeholder={t('pasteOfferPlaceholder')}
-              rows={3}
-              className="w-full text-xs font-mono p-2.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 resize-none focus:outline-hidden focus:ring-2 focus:ring-indigo-500"
-            />
-            {!answerCode && (
               <button
-                onClick={() => handleAcceptOffer()}
-                disabled={!inputCode.trim() || state === 'creating'}
-                data-testid="generate-answer-btn"
-                className="mt-2 w-full py-2 px-4 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white rounded-lg text-xs font-semibold transition focus:outline-hidden focus:ring-2 focus:ring-indigo-500"
+                onClick={handleJoin}
+                data-testid="join-connection-btn"
+                className="p-4 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-750 text-slate-900 dark:text-slate-100 border border-slate-300 dark:border-slate-700 rounded-xl font-medium shadow-sm transition text-center focus:outline-hidden focus:ring-2 focus:ring-slate-400 cursor-pointer"
               >
-                {state === 'creating' ? t('generatingAnswer') : t('generateAnswer')}
+                {t('joinConnection')}
+                <span className="block text-xs text-slate-600 dark:text-slate-400 mt-1">
+                  {t('joinConnectionDesc')}
+                </span>
               </button>
-            )}
-          </div>
-
-          {answerCode && (
-            <div>
-              <div className="flex items-center justify-between mb-1">
-                <label htmlFor="answer-code-output" className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                  {t('answerCodeLabel')}
-                </label>
-                <button
-                  type="button"
-                  data-testid="toggle-answer-qr-btn"
-                  onClick={() => setShowAnswerQr(!showAnswerQr)}
-                  className="text-xs text-indigo-600 dark:text-indigo-400 hover:underline font-medium"
-                >
-                  {showAnswerQr ? t('hideQr') : t('showQr')}
-                </button>
-              </div>
-
-              {showAnswerQr && (
-                <div className="mb-3">
-                  <QrCodeDisplay data={answerCode} />
-                </div>
-              )}
-
-              <div className="relative">
-                <textarea
-                  id="answer-code-output"
-                  readOnly
-                  data-testid="answer-code-output"
-                  value={answerCode}
-                  rows={3}
-                  className="w-full text-xs font-mono p-2.5 pe-20 rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-200 resize-none focus:outline-hidden focus:ring-2 focus:ring-indigo-500"
-                />
-                <button
-                  type="button"
-                  data-testid="copy-answer-btn"
-                  onClick={() => copyToClipboard(answerCode, 'answer')}
-                  className="absolute top-2 end-2 px-2.5 py-1 text-xs font-medium rounded-md bg-indigo-600 text-white hover:bg-indigo-700 shadow-xs focus:outline-hidden focus:ring-2 focus:ring-indigo-400"
-                >
-                  {copied === 'answer' ? t('copied') : t('copy')}
-                </button>
-              </div>
-              <p className="mt-1 text-xs text-slate-600 dark:text-slate-400">
-                {t('waitingForCreator')}
-              </p>
             </div>
           )}
-        </div>
+
+          {/* Creator View */}
+          {mode === 'create' && (
+            <div className="space-y-4">
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <label htmlFor="offer-code-output" className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                    {t('offerCodeLabel')}
+                  </label>
+                  {offerCode && (
+                    <button
+                      type="button"
+                      data-testid="toggle-offer-qr-btn"
+                      onClick={() => setShowOfferQr(!showOfferQr)}
+                      className="text-xs text-indigo-600 dark:text-indigo-400 hover:underline font-medium"
+                    >
+                      {showOfferQr ? t('hideQr') : t('showQr')}
+                    </button>
+                  )}
+                </div>
+
+                {showOfferQr && offerCode && (
+                  <div className="mb-3">
+                    <QrCodeDisplay data={offerCode} />
+                  </div>
+                )}
+
+                <div className="relative">
+                  <textarea
+                    id="offer-code-output"
+                    readOnly
+                    data-testid="offer-code-output"
+                    value={offerCode || (state === 'creating' ? t('generatingOffer') : '')}
+                    rows={3}
+                    className="w-full text-xs font-mono p-2.5 pe-20 rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-200 resize-none focus:outline-hidden focus:ring-2 focus:ring-indigo-500"
+                  />
+                  {offerCode && (
+                    <button
+                      type="button"
+                      data-testid="copy-offer-btn"
+                      onClick={() => copyToClipboard(offerCode, 'offer')}
+                      className="absolute top-2 end-2 px-2.5 py-1 text-xs font-medium rounded-md bg-indigo-600 text-white hover:bg-indigo-700 shadow-xs focus:outline-hidden focus:ring-2 focus:ring-indigo-400"
+                    >
+                      {copied === 'offer' ? t('copied') : t('copy')}
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <label htmlFor="paste-answer-input" className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                    {t('pasteAnswerLabel')}
+                  </label>
+                  <button
+                    type="button"
+                    data-testid="scan-answer-qr-btn"
+                    onClick={() => handleOpenScanner('answer')}
+                    className="text-xs text-indigo-600 dark:text-indigo-400 hover:underline font-medium"
+                  >
+                    📷 {t('scanQr')}
+                  </button>
+                </div>
+                <textarea
+                  id="paste-answer-input"
+                  data-testid="paste-answer-input"
+                  value={inputCode}
+                  onChange={(e) => setInputCode(e.target.value)}
+                  placeholder={t('pasteAnswerPlaceholder')}
+                  rows={3}
+                  className="w-full text-xs font-mono p-2.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 resize-none focus:outline-hidden focus:ring-2 focus:ring-indigo-500"
+                />
+                <button
+                  onClick={() => handleAcceptAnswer()}
+                  disabled={!inputCode.trim() || state === 'connecting'}
+                  data-testid="connect-answer-btn"
+                  className="mt-2 w-full py-2 px-4 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white rounded-lg text-xs font-semibold transition focus:outline-hidden focus:ring-2 focus:ring-emerald-500"
+                >
+                  {state === 'connecting' ? t('connecting') : t('connect')}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Joiner View */}
+          {mode === 'join' && (
+            <div className="space-y-4">
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <label htmlFor="paste-offer-input" className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                    {t('pasteOfferLabel')}
+                  </label>
+                  <button
+                    type="button"
+                    data-testid="scan-offer-qr-btn"
+                    onClick={() => handleOpenScanner('offer')}
+                    className="text-xs text-indigo-600 dark:text-indigo-400 hover:underline font-medium"
+                  >
+                    📷 {t('scanQr')}
+                  </button>
+                </div>
+                <textarea
+                  id="paste-offer-input"
+                  data-testid="paste-offer-input"
+                  value={inputCode}
+                  onChange={(e) => setInputCode(e.target.value)}
+                  placeholder={t('pasteOfferPlaceholder')}
+                  rows={3}
+                  className="w-full text-xs font-mono p-2.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 resize-none focus:outline-hidden focus:ring-2 focus:ring-indigo-500"
+                />
+                {!answerCode && (
+                  <button
+                    onClick={() => handleAcceptOffer()}
+                    disabled={!inputCode.trim() || state === 'creating'}
+                    data-testid="generate-answer-btn"
+                    className="mt-2 w-full py-2 px-4 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white rounded-lg text-xs font-semibold transition focus:outline-hidden focus:ring-2 focus:ring-indigo-500"
+                  >
+                    {state === 'creating' ? t('generatingAnswer') : t('generateAnswer')}
+                  </button>
+                )}
+              </div>
+
+              {answerCode && (
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <label htmlFor="answer-code-output" className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                      {t('answerCodeLabel')}
+                    </label>
+                    <button
+                      type="button"
+                      data-testid="toggle-answer-qr-btn"
+                      onClick={() => setShowAnswerQr(!showAnswerQr)}
+                      className="text-xs text-indigo-600 dark:text-indigo-400 hover:underline font-medium"
+                    >
+                      {showAnswerQr ? t('hideQr') : t('showQr')}
+                    </button>
+                  </div>
+
+                  {showAnswerQr && (
+                    <div className="mb-3">
+                      <QrCodeDisplay data={answerCode} />
+                    </div>
+                  )}
+
+                  <div className="relative">
+                    <textarea
+                      id="answer-code-output"
+                      readOnly
+                      data-testid="answer-code-output"
+                      value={answerCode}
+                      rows={3}
+                      className="w-full text-xs font-mono p-2.5 pe-20 rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-200 resize-none focus:outline-hidden focus:ring-2 focus:ring-indigo-500"
+                    />
+                    <button
+                      type="button"
+                      data-testid="copy-answer-btn"
+                      onClick={() => copyToClipboard(answerCode, 'answer')}
+                      className="absolute top-2 end-2 px-2.5 py-1 text-xs font-medium rounded-md bg-indigo-600 text-white hover:bg-indigo-700 shadow-xs focus:outline-hidden focus:ring-2 focus:ring-indigo-400"
+                    >
+                      {copied === 'answer' ? t('copied') : t('copy')}
+                    </button>
+                  </div>
+                  <p className="mt-1 text-xs text-slate-600 dark:text-slate-400">
+                    {t('waitingForCreator')}
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+        </>
       )}
 
       {/* Connected View: File Transfer Protocol */}
