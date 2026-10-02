@@ -308,47 +308,51 @@ export function ConnectionPanel() {
       {state !== 'connected' && connectionTab === 'manual' && (
         <>
           {mode === 'none' && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 items-stretch">
               <button
                 type="button"
                 onClick={handleCreate}
                 data-testid="create-connection-btn"
-                className="group p-5 bg-[#F8F8FA] dark:bg-[#2C2C2E] hover:bg-[#007AFF]/10 dark:hover:bg-[#0A84FF]/15 border border-black/[0.05] dark:border-white/[0.08] hover:border-[#007AFF]/40 rounded-[20px] shadow-[0_1px_3px_rgba(0,0,0,0.03)] transition-all duration-150 text-start active:scale-[0.98] cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#007AFF]"
+                className="group h-full p-4 bg-[#F8F8FA] dark:bg-[#2C2C2E] hover:bg-[#007AFF]/10 dark:hover:bg-[#0A84FF]/15 border border-black/[0.05] dark:border-white/[0.08] hover:border-[#007AFF]/40 rounded-[20px] shadow-[0_1px_3px_rgba(0,0,0,0.03)] transition-all duration-150 text-start active:scale-[0.98] cursor-pointer flex items-center gap-3.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#007AFF]"
               >
-                <div className="w-10 h-10 rounded-xl bg-[#007AFF]/12 dark:bg-[#0A84FF]/20 text-[#007AFF] dark:text-[#0A84FF] flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
+                <div className="w-11 h-11 rounded-2xl bg-[#007AFF]/12 dark:bg-[#0A84FF]/20 text-[#007AFF] dark:text-[#0A84FF] flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
                   <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                     <circle cx="12" cy="12" r="10" />
                     <line x1="12" y1="8" x2="12" y2="16" />
                     <line x1="8" y1="12" x2="16" y2="12" />
                   </svg>
                 </div>
-                <div className="text-[15px] font-semibold text-[#1D1D1F] dark:text-[#F5F5F7] tracking-tight">
-                  {t('createConnection')}
+                <div className="flex-1 min-w-0">
+                  <div className="text-[14px] font-semibold text-[#1D1D1F] dark:text-[#F5F5F7] tracking-tight leading-snug">
+                    {t('createConnection')}
+                  </div>
+                  <p className="text-[12px] text-[#86868B] dark:text-[#98989D] mt-0.5 font-normal leading-snug">
+                    {t('createConnectionDesc')}
+                  </p>
                 </div>
-                <p className="text-[12px] text-[#86868B] dark:text-[#98989D] mt-1 font-normal leading-relaxed">
-                  {t('createConnectionDesc')}
-                </p>
               </button>
 
               <button
                 type="button"
                 onClick={handleJoin}
                 data-testid="join-connection-btn"
-                className="group p-5 bg-[#F8F8FA] dark:bg-[#2C2C2E] hover:bg-[#007AFF]/10 dark:hover:bg-[#0A84FF]/15 border border-black/[0.05] dark:border-white/[0.08] hover:border-[#007AFF]/40 rounded-[20px] shadow-[0_1px_3px_rgba(0,0,0,0.03)] transition-all duration-150 text-start active:scale-[0.98] cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#007AFF]"
+                className="group h-full p-4 bg-[#F8F8FA] dark:bg-[#2C2C2E] hover:bg-[#007AFF]/10 dark:hover:bg-[#0A84FF]/15 border border-black/[0.05] dark:border-white/[0.08] hover:border-[#007AFF]/40 rounded-[20px] shadow-[0_1px_3px_rgba(0,0,0,0.03)] transition-all duration-150 text-start active:scale-[0.98] cursor-pointer flex items-center gap-3.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#007AFF]"
               >
-                <div className="w-10 h-10 rounded-xl bg-[#34C759]/12 dark:bg-[#30D158]/20 text-[#248A3D] dark:text-[#30D158] flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
+                <div className="w-11 h-11 rounded-2xl bg-[#34C759]/12 dark:bg-[#30D158]/20 text-[#248A3D] dark:text-[#30D158] flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
                   <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
                     <polyline points="10 17 15 12 10 7" />
                     <line x1="15" y1="12" x2="3" y2="12" />
                   </svg>
                 </div>
-                <div className="text-[15px] font-semibold text-[#1D1D1F] dark:text-[#F5F5F7] tracking-tight">
-                  {t('joinConnection')}
+                <div className="flex-1 min-w-0">
+                  <div className="text-[14px] font-semibold text-[#1D1D1F] dark:text-[#F5F5F7] tracking-tight leading-snug">
+                    {t('joinConnection')}
+                  </div>
+                  <p className="text-[12px] text-[#86868B] dark:text-[#98989D] mt-0.5 font-normal leading-snug">
+                    {t('joinConnectionDesc')}
+                  </p>
                 </div>
-                <p className="text-[12px] text-[#86868B] dark:text-[#98989D] mt-1 font-normal leading-relaxed">
-                  {t('joinConnectionDesc')}
-                </p>
               </button>
             </div>
           )}
