@@ -20,7 +20,6 @@ export interface JoinerCallbacks {
 }
 
 export function generateRoomCode(): string {
-  // Generate a random 6-digit PIN string
   const pin = Math.floor(100000 + Math.random() * 900000)
   return pin.toString()
 }
@@ -38,14 +37,20 @@ export function getWsUrl(roomCode: string, role: 'creator' | 'joiner'): string {
 export class SignalingClient {
   private ws: WebSocket | null = null
   private pingInterval: ReturnType<typeof setInterval> | null = null
+  private isManuallyClosed = false
+  private reconnectAttempts = 0
+  private maxReconnectAttempts = 3
 
   connectAsCreator(roomCode: string, callbacks: CreatorCallbacks): void {
-    this.close()
+    this.isManuallyClosed = false
+    this.closeWsOnly()
+
     const url = getWsUrl(roomCode, 'creator')
     const ws = new WebSocket(url)
     this.ws = ws
 
     ws.onopen = () => {
+      this.reconnectAttempts = 0
       callbacks.onRoomReady?.(roomCode)
       this.startPing()
     }
@@ -68,13 +73,26 @@ export class SignalingClient {
     }
 
     ws.onerror = () => {
-      callbacks.onError('WebSocket connection error')
+      // Handled in onclose
     }
 
     ws.onclose = (event) => {
       this.stopPing()
+      if (this.isManuallyClosed) return
+
+      // Attempt silent auto-reconnect if dropped unexpectedly
+      if (this.reconnectAttempts < this.maxReconnectAttempts) {
+        this.reconnectAttempts++
+        setTimeout(() => {
+          if (!this.isManuallyClosed) {
+            this.connectAsCreator(roomCode, callbacks)
+          }
+        }, 1000)
+        return
+      }
+
       if (event.code !== 1000) {
-        callbacks.onError(`Disconnected from signaling server (code: ${event.code})`)
+        callbacks.onError(`Connection lost with signaling server (code: ${event.code})`)
       }
     }
   }
@@ -84,14 +102,16 @@ export class SignalingClient {
     joinerInfo: DeviceInfo,
     callbacks: JoinerCallbacks,
   ): void {
-    this.close()
+    this.isManuallyClosed = false
+    this.closeWsOnly()
+
     const url = getWsUrl(roomCode, 'joiner')
     const ws = new WebSocket(url)
     this.ws = ws
 
     ws.onopen = () => {
+      this.reconnectAttempts = 0
       this.startPing()
-      // Send join request with device info
       this.send({
         type: 'join_request',
         joinerInfo,
@@ -120,13 +140,26 @@ export class SignalingClient {
     }
 
     ws.onerror = () => {
-      callbacks.onError('Could not connect to room server')
+      // Handled in onclose
     }
 
     ws.onclose = (event) => {
       this.stopPing()
+      if (this.isManuallyClosed) return
+
+      // Attempt silent auto-reconnect if dropped unexpectedly
+      if (this.reconnectAttempts < this.maxReconnectAttempts) {
+        this.reconnectAttempts++
+        setTimeout(() => {
+          if (!this.isManuallyClosed) {
+            this.connectAsJoiner(roomCode, joinerInfo, callbacks)
+          }
+        }, 1000)
+        return
+      }
+
       if (event.code !== 1000) {
-        callbacks.onError(`Disconnected from signaling server (code: ${event.code})`)
+        callbacks.onError(`Connection lost with signaling server (code: ${event.code})`)
       }
     }
   }
@@ -153,9 +186,10 @@ export class SignalingClient {
 
   private startPing(): void {
     this.stopPing()
+    // 5-second heartbeat prevents carrier NAT timeout (MCI / Irancell / CGNAT)
     this.pingInterval = setInterval(() => {
       this.send({ type: 'ping' })
-    }, 25000)
+    }, 5000)
   }
 
   private stopPing(): void {
@@ -165,7 +199,7 @@ export class SignalingClient {
     }
   }
 
-  close(): void {
+  private closeWsOnly(): void {
     this.stopPing()
     if (this.ws) {
       try {
@@ -175,5 +209,10 @@ export class SignalingClient {
       }
       this.ws = null
     }
+  }
+
+  close(): void {
+    this.isManuallyClosed = true
+    this.closeWsOnly()
   }
 }

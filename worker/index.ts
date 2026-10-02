@@ -32,11 +32,15 @@ export class RoomDurableObject extends DurableObject {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private pendingJoinerInfo: any = null
 
+  constructor(ctx: DurableObjectState, env: Env) {
+    super(ctx, env)
+  }
+
   async fetch(request: Request): Promise<Response> {
     const url = new URL(request.url)
     const role = url.searchParams.get('role')
 
-    if (request.headers.get('Upgrade') !== 'websocket') {
+    if (request.headers.get('Upgrade')?.toLowerCase() !== 'websocket') {
       return new Response('Expected WebSocket upgrade', { status: 426 })
     }
 
@@ -207,7 +211,8 @@ export default {
 
     // WebSocket room signaling
     if (url.pathname === '/api/ws') {
-      const room = url.searchParams.get('room')?.trim().toLowerCase()
+      const rawRoom = url.searchParams.get('room')?.trim()
+      const room = rawRoom ? (rawRoom.replace(/\D/g, '') || rawRoom.toLowerCase()) : ''
       const role = url.searchParams.get('role')?.trim().toLowerCase()
 
       if (!room || room.length < 4 || room.length > 16) {
